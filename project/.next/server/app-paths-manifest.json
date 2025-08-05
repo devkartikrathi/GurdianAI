@@ -1,8 +1,10 @@
 {
+  "/api/auth/sync-user/route": "app/api/auth/sync-user/route.js",
+  "/api/settings/risk-profile/route": "app/api/settings/risk-profile/route.js",
+  "/api/auth/profile/route": "app/api/auth/profile/route.js",
+  "/sign-up/[[...sign-up]]/page": "app/sign-up/[[...sign-up]]/page.js",
   "/page": "app/page.js",
   "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
-  "/api/settings/risk-profile/route": "app/api/settings/risk-profile/route.js",
-  "/dashboard/upload/page": "app/dashboard/upload/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/dashboard/settings/page": "app/dashboard/settings/page.js"
 }

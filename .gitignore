@@ -1,3 +1,6 @@
 /.bmad-core
 /.cursor
 /docs
+
+node_modules
+package-lock.json

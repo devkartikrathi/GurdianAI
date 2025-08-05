@@ -1,0 +1,199 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  clerkUserId          String   @unique @map("clerk_user_id")
+  email                String   @unique
+  name                 String
+  totalCapital         Decimal  @default(0) @map("total_capital") @db.Decimal(15, 2)
+  maxDailyDrawdownPct  Decimal  @default(2.0) @map("max_daily_drawdown_pct") @db.Decimal(5, 2)
+  maxConsecutiveLosses Int      @default(3) @map("max_consecutive_losses")
+  riskPerTradePct      Decimal  @default(1.0) @map("risk_per_trade_pct") @db.Decimal(5, 2)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  rawTrades         RawTrade[]
+  matchedTrades     MatchedTrade[]
+  riskSessions      RiskSession[]
+  brokerConnections BrokerConnection[]
+  tradeBooks        TradeBook[]
+  guardianInsights  GuardianInsight[]
+  tradingSummaries  UserTradingSummary[]
+
+  @@map("users")
+}
+
+model BrokerConnection {
+  id                 String    @id @default(cuid())
+  userId             String    @map("user_id")
+  brokerName         String    @default("zerodha") @map("broker_name")
+  apiKey             String    @map("api_key")
+  apiSecret          String?   @map("api_secret")
+  accessToken        String?   @map("access_token")
+  requestToken       String?   @map("request_token")
+  userIdZerodha      String?   @map("user_id_zerodha")
+  userName           String?   @map("user_name")
+  email              String?
+  sessionGeneratedAt DateTime? @map("session_generated_at")
+  expiresAt          DateTime? @map("expires_at")
+  connectionStatus   String    @default("active") @map("connection_status")
+  lastSyncAt         DateTime? @map("last_sync_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, brokerName])
+  @@map("broker_connections")
+}
+
+model TradeBook {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  fileName        String   @map("file_name")
+  fileSize        Int      @map("file_size")
+  uploadTimestamp DateTime @default(now()) @map("upload_timestamp")
+  parsed          Boolean  @default(false)
+  totalRows       Int      @default(0) @map("total_rows")
+  schemaMapping   Json?    @map("schema_mapping")
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawTrades RawTrade[]
+
+  @@map("trade_books")
+}
+
+model RawTrade {
+  id            String   @id @default(cuid())
+  tradeBookId   String?  @map("trade_book_id")
+  userId        String   @map("user_id")
+  symbol        String
+  tradeType     String   @map("trade_type")
+  quantity      Int
+  price         Decimal  @db.Decimal(10, 2)
+  amount        Decimal  @db.Decimal(15, 2)
+  tradeDatetime DateTime @map("trade_datetime")
+  source        String   @default("csv")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tradeBook TradeBook? @relation(fields: [tradeBookId], references: [id], onDelete: Cascade)
+
+  @@map("raw_trades")
+}
+
+model MatchedTrade {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  symbol           String
+  quantity         Int
+  buyPrice         Decimal  @map("buy_price") @db.Decimal(10, 2)
+  sellPrice        Decimal  @map("sell_price") @db.Decimal(10, 2)
+  pnl              Decimal  @db.Decimal(15, 2)
+  pnlPct           Decimal  @map("pnl_pct") @db.Decimal(8, 4)
+  buyDatetime      DateTime @map("buy_datetime")
+  sellDatetime     DateTime @map("sell_datetime")
+  duration         String // PostgreSQL interval type
+  tradeSessionDate DateTime @map("trade_session_date") @db.Date
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("matched_trades")
+}
+
+model OpenTrade {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  symbol      String
+  quantity    Int
+  buyPrice    Decimal  @map("buy_price") @db.Decimal(10, 2)
+  buyDatetime DateTime @map("buy_datetime")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("open_trades")
+}
+
+model TodayTrade {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  symbol        String
+  tradeType     String   @map("trade_type")
+  quantity      Int
+  price         Decimal  @db.Decimal(10, 2)
+  tradeDatetime DateTime @map("trade_datetime")
+  source        String   @default("zerodha_api")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("today_trades")
+}
+
+model GuardianInsight {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  insightType     String   @map("insight_type")
+  insightData     Json     @map("insight_data")
+  confidenceScore Decimal? @map("confidence_score") @db.Decimal(3, 2)
+  tradesAnalyzed  Int      @map("trades_analyzed")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("guardian_ai_insights")
+}
+
+model RiskSession {
+  id                 String    @id @default(cuid())
+  userId             String    @map("user_id")
+  sessionDate        DateTime  @map("session_date") @db.Date
+  tradesCount        Int       @default(0) @map("trades_count")
+  currentPnl         Decimal   @default(0) @map("current_pnl") @db.Decimal(15, 2)
+  currentDrawdownPct Decimal   @default(0) @map("current_drawdown_pct") @db.Decimal(5, 2)
+  consecutiveLosses  Int       @default(0) @map("consecutive_losses")
+  lastTradeTime      DateTime? @map("last_trade_time")
+  riskStatus         String    @default("green") @map("risk_status")
+  sessionActive      Boolean   @default(true) @map("session_active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionDate])
+  @@map("risk_sessions")
+}
+
+model UserTradingSummary {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  version        Int
+  generatedAt    DateTime  @default(now()) @map("generated_at")
+  dataRangeStart DateTime  @map("data_range_start") @db.Date
+  dataRangeEnd   DateTime  @map("data_range_end") @db.Date
+  summaryData    Json      @map("summary_data")
+  insightsHash   String?   @map("insights_hash")
+  nextUpdateDue  DateTime? @map("next_update_due")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_trading_summary")
+}

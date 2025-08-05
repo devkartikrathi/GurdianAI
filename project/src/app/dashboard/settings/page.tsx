@@ -5,9 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { UserButton } from '@clerk/nextjs'
 import { Separator } from '@/components/ui/separator'
+import { useUserSync } from '@/hooks/useUserSync'
 import { 
   User, 
   Shield, 
@@ -28,7 +27,19 @@ interface RiskProfile {
   riskPerTradePct: number
 }
 
+interface UserProfile {
+  name: string
+  email: string
+}
+
 export default function SettingsPage() {
+  const { user, loading: userLoading, error: userError, refreshUser } = useUserSync()
+  
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: '',
+    email: ''
+  })
+
   const [riskProfile, setRiskProfile] = useState<RiskProfile>({
     totalCapital: 100000,
     maxDailyDrawdownPct: 2.0,
@@ -36,9 +47,21 @@ export default function SettingsPage() {
     riskPerTradePct: 1.0
   })
 
-  const [isSaving, setIsSaving] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [isSavingRisk, setIsSavingRisk] = useState(false)
+  const [isLoadingRisk, setIsLoadingRisk] = useState(true)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false)
+
+  // Load user profile data
+  useEffect(() => {
+    if (user) {
+      setUserProfile({
+        name: user.name || '',
+        email: user.email || ''
+      })
+    }
+  }, [user])
 
   // Load user's current risk profile settings
   useEffect(() => {
@@ -52,12 +75,19 @@ export default function SettingsPage() {
       } catch (error) {
         console.error('Error loading risk profile:', error)
       } finally {
-        setIsLoading(false)
+        setIsLoadingRisk(false)
       }
     }
 
     loadRiskProfile()
   }, [])
+
+  const handleUserProfileChange = (field: keyof UserProfile, value: string) => {
+    setUserProfile(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
   const handleRiskProfileChange = (field: keyof RiskProfile, value: number) => {
     setRiskProfile(prev => ({
@@ -66,8 +96,38 @@ export default function SettingsPage() {
     }))
   }
 
+  const handleSaveUserProfile = async () => {
+    setIsSavingProfile(true)
+    setProfileSaveSuccess(false)
+    
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userProfile),
+      })
+
+      if (response.ok) {
+        setProfileSaveSuccess(true)
+        // Refresh user data
+        await refreshUser()
+        // Hide success message after 3 seconds
+        setTimeout(() => setProfileSaveSuccess(false), 3000)
+      } else {
+        const error = await response.json()
+        console.error('Error saving user profile:', error)
+      }
+    } catch (error) {
+      console.error('Error saving user profile:', error)
+    } finally {
+      setIsSavingProfile(false)
+    }
+  }
+
   const handleSaveRiskProfile = async () => {
-    setIsSaving(true)
+    setIsSavingRisk(true)
     setSaveSuccess(false)
     
     try {
@@ -90,14 +150,25 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error saving risk profile:', error)
     } finally {
-      setIsSaving(false)
+      setIsSavingRisk(false)
     }
   }
 
-  if (isLoading) {
+  if (userLoading || isLoadingRisk) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-muted-foreground">Loading settings...</div>
+      </div>
+    )
+  }
+
+  if (userError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Error loading user data</p>
+          <p className="text-sm text-muted-foreground">{userError}</p>
+        </div>
       </div>
     )
   }
@@ -109,10 +180,6 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Settings</h1>
           <p className="text-muted-foreground">Manage your account and preferences</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <UserButton afterSignOutUrl="/" />
         </div>
       </div>
 
@@ -132,17 +199,47 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Your name" defaultValue="John Doe" />
+                <Input 
+                  id="name" 
+                  placeholder="Your name" 
+                  value={userProfile.name}
+                  onChange={(e) => handleUserProfileChange('name', e.target.value)}
+                />
               </div>
               <div className="flex-1">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="your@email.com" defaultValue="john@example.com" disabled />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="your@email.com" 
+                  value={userProfile.email}
+                  onChange={(e) => handleUserProfileChange('email', e.target.value)}
+                />
               </div>
             </div>
-            <Button className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              Update Profile
+            <Button 
+              className="w-full" 
+              onClick={handleSaveUserProfile}
+              disabled={isSavingProfile}
+            >
+              {isSavingProfile ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Update Profile
+                </>
+              )}
             </Button>
+            {profileSaveSuccess && (
+              <div className="flex items-center gap-2 text-green-600 text-sm">
+                <CheckCircle className="h-4 w-4" />
+                Profile updated successfully!
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -207,9 +304,9 @@ export default function SettingsPage() {
             <Button 
               className="w-full" 
               onClick={handleSaveRiskProfile}
-              disabled={isSaving}
+              disabled={isSavingRisk}
             >
-              {isSaving ? (
+              {isSavingRisk ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Saving...
