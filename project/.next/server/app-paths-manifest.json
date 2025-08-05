@@ -1,0 +1,8 @@
+{
+  "/page": "app/page.js",
+  "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
+  "/api/settings/risk-profile/route": "app/api/settings/risk-profile/route.js",
+  "/dashboard/upload/page": "app/dashboard/upload/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js"
+}
