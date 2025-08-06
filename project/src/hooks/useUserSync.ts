@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 
 interface UserData {
@@ -36,7 +36,7 @@ export function useUserSync(): UseUserSyncReturn {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const syncUser = async () => {
+    const syncUser = useCallback(async () => {
         if (!isSignedIn || !clerkUser) return
 
         setLoading(true)
@@ -62,7 +62,7 @@ export function useUserSync(): UseUserSyncReturn {
         } finally {
             setLoading(false)
         }
-    }
+    }, [isSignedIn, clerkUser])
 
     const refreshUser = async () => {
         if (!isSignedIn || !clerkUser) return
@@ -100,7 +100,7 @@ export function useUserSync(): UseUserSyncReturn {
             setUser(null)
             setError(null)
         }
-    }, [isLoaded, isSignedIn, clerkUser])
+    }, [isLoaded, isSignedIn, clerkUser, syncUser])
 
     return {
         user,

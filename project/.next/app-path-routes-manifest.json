@@ -1,0 +1,19 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/analytics/performance/route": "/api/analytics/performance",
+  "/api/analytics/emotional-zones/route": "/api/analytics/emotional-zones",
+  "/api/analytics/symbol-analysis/route": "/api/analytics/symbol-analysis",
+  "/api/onboarding/route": "/api/onboarding",
+  "/api/auth/sync-user/route": "/api/auth/sync-user",
+  "/api/auth/profile/route": "/api/auth/profile",
+  "/api/settings/risk-profile/route": "/api/settings/risk-profile",
+  "/api/trades/upload/route": "/api/trades/upload",
+  "/page": "/",
+  "/sign-in/[[...sign-in]]/page": "/sign-in/[[...sign-in]]",
+  "/sign-up/[[...sign-up]]/page": "/sign-up/[[...sign-up]]",
+  "/dashboard/analytics/page": "/dashboard/analytics",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/upload/page": "/dashboard/upload",
+  "/dashboard/settings/page": "/dashboard/settings",
+  "/onboarding/page": "/onboarding"
+}
