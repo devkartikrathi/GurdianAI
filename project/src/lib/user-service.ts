@@ -1,5 +1,4 @@
 import { prisma } from './prisma'
-import { Decimal } from '@prisma/client/runtime/library'
 
 export interface UserProfile {
     id: string
@@ -55,13 +54,31 @@ export class UserService {
             return null
         }
 
-        // Convert Decimal to number
-        return {
-            ...user,
-            totalCapital: Number(user.totalCapital),
-            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
-            riskPerTradePct: Number(user.riskPerTradePct),
+        return user
+    }
+
+    static async getUserByEmail(email: string): Promise<UserProfile | null> {
+        const user = await prisma.user.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                clerkUserId: true,
+                email: true,
+                name: true,
+                totalCapital: true,
+                maxDailyDrawdownPct: true,
+                maxConsecutiveLosses: true,
+                riskPerTradePct: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        })
+
+        if (!user) {
+            return null
         }
+
+        return user
     }
 
     static async createUser(data: CreateUserData): Promise<UserProfile> {
@@ -89,13 +106,7 @@ export class UserService {
             }
         })
 
-        // Convert Decimal to number
-        return {
-            ...user,
-            totalCapital: Number(user.totalCapital),
-            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
-            riskPerTradePct: Number(user.riskPerTradePct),
-        }
+        return user
     }
 
     static async updateUser(clerkUserId: string, data: UpdateUserData): Promise<UserProfile> {
@@ -123,13 +134,7 @@ export class UserService {
             }
         })
 
-        // Convert Decimal to number
-        return {
-            ...user,
-            totalCapital: Number(user.totalCapital),
-            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
-            riskPerTradePct: Number(user.riskPerTradePct),
-        }
+        return user
     }
 
     static async deleteUser(clerkUserId: string): Promise<void> {
@@ -157,24 +162,7 @@ export class UserService {
             return null
         }
 
-        return {
-            ...user,
-            totalCapital: Number(user.totalCapital),
-            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
-            riskPerTradePct: Number(user.riskPerTradePct),
-            matchedTrades: user.matchedTrades.map(trade => ({
-                ...trade,
-                pnl: Number(trade.pnl),
-                pnlPct: Number(trade.pnlPct),
-                buyPrice: Number(trade.buyPrice),
-                sellPrice: Number(trade.sellPrice),
-            })),
-            riskSessions: user.riskSessions.map(session => ({
-                ...session,
-                currentPnl: Number(session.currentPnl),
-                currentDrawdownPct: Number(session.currentDrawdownPct),
-            }))
-        }
+        return user
     }
 
     static async userExists(clerkUserId: string): Promise<boolean> {

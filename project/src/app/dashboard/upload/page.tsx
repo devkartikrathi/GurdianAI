@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { Upload, FileText, CheckCircle, AlertCircle, Database, Shield, Sparkles } from 'lucide-react'
 import Papa from 'papaparse'
 
 export default function UploadPage() {
@@ -88,132 +88,184 @@ export default function UploadPage() {
   const getStatusIcon = () => {
     switch (uploadStatus) {
       case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+        return <CheckCircle className="h-6 w-6 text-success" />
       case 'error':
-        return <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+        return <AlertCircle className="h-6 w-6 text-danger" />
       default:
         return <Upload className="h-6 w-6 text-muted-foreground" />
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Upload Trades</h1>
-        <p className="text-muted-foreground mt-2">
-          Upload your trade data in CSV format for analysis
-        </p>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <Database className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Upload Trades</h1>
+            <p className="text-muted-foreground">Upload your trade data in CSV format for AI analysis</p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Trade Data Upload
-          </CardTitle>
-          <CardDescription>
-            Drag and drop your CSV file here, or click to browse
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg font-medium text-foreground mb-2">
-              {isDragActive ? 'Drop the file here' : 'Drag & drop a CSV file here'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              or click to select a file
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Supported format: CSV with columns for symbol, trade type, quantity, price, and date/time
-            </p>
-          </div>
-
-          {uploadStatus !== 'idle' && (
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center space-x-2">
-                {getStatusIcon()}
-                <span className="text-sm font-medium text-foreground">
-                  {uploadMessage}
-                </span>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Upload Area */}
+        <div className="lg:col-span-2">
+          <Card className="glass-card hover-lift">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                <CardTitle>Trade Data Upload</CardTitle>
               </div>
-              
-              {uploadStatus === 'uploading' && (
-                <Progress value={uploadProgress} className="h-2" />
-              )}
+              <CardDescription>
+                Drag and drop your CSV file here, or click to browse
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+                  isDragActive
+                    ? 'border-primary bg-primary/5 shadow-lg shadow-primary/25'
+                    : 'border-border hover:border-primary/50 hover:bg-accent/5'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium text-foreground mb-2">
+                  {isDragActive ? 'Drop the file here' : 'Drag & drop a CSV file here'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  or click to select a file
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supported format: CSV with columns for symbol, trade type, quantity, price, and date/time
+                </p>
+              </div>
 
-              {parsedData.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-foreground mb-2">
-                    Preview ({parsedData.length} rows)
-                  </h4>
-                  <div className="max-h-40 overflow-y-auto border rounded-md">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          {Object.keys(parsedData[0] || {}).map((header) => (
-                            <th key={header} className="px-2 py-1 text-left font-medium">
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {parsedData.slice(0, 5).map((row, index) => (
-                          <tr key={index} className="border-t">
-                            {Object.values(row).map((value: any, cellIndex) => (
-                              <td key={cellIndex} className="px-2 py-1">
-                                {String(value)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {uploadStatus !== 'idle' && (
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border">
+                    {getStatusIcon()}
+                    <span className="text-sm font-medium text-foreground">
+                      {uploadMessage}
+                    </span>
                   </div>
+                  
+                  {uploadStatus === 'uploading' && (
+                    <Progress value={uploadProgress} className="h-2" />
+                  )}
+
+                  {parsedData.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-foreground mb-2">
+                        Preview ({parsedData.length} rows)
+                      </h4>
+                      <div className="max-h-40 overflow-y-auto border rounded-lg bg-card">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead className="bg-muted/50">
+                              <tr>
+                                {Object.keys(parsedData[0] || {}).map((header) => (
+                                  <th key={header} className="px-2 py-1 text-left font-medium">
+                                    {header}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {parsedData.slice(0, 5).map((row, index) => (
+                                <tr key={index} className="border-t border-border/50">
+                                  {Object.values(row).map((value: any, cellIndex) => (
+                                    <td key={cellIndex} className="px-2 py-1">
+                                      {String(value)}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Guidelines</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Required Columns</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Symbol/Stock name</li>
-                <li>• Trade type (BUY/SELL)</li>
-                <li>• Quantity</li>
-                <li>• Price</li>
-                <li>• Date and time</li>
+        {/* Guidelines Sidebar */}
+        <div className="space-y-6">
+          <Card className="glass-card hover-lift">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-accent" />
+                <CardTitle>Upload Guidelines</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium text-foreground mb-2">Required Columns</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    Symbol/Stock name
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    Trade type (BUY/SELL)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    Quantity
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    Price
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    Date and time
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card hover-lift">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-success" />
+                <CardTitle>Supported Formats</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  CSV files (.csv)
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  Excel exports
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  Broker statements
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  Custom trade logs
+                </li>
               </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Supported Formats</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• CSV files (.csv)</li>
-                <li>• Excel exports</li>
-                <li>• Broker statements</li>
-                <li>• Custom trade logs</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

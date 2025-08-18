@@ -2,121 +2,421 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Modern CSS Custom Properties with Trading Theme */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* Core Colors - Trading Professional Theme */
+    --background: 222 10% 5%;
+    --foreground: 0 0% 98%;
+    --card: 222 10% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 222 15% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary - Guardian AI Blue */
+    --primary: 217 91% 59%;
+    --primary-foreground: 222 84% 4%;
+
+    /* Secondary - Professional Gray */
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 0 0% 85%;
+
+    /* Accent - Trading Gold */
+    --accent: 45 90% 55%;
+    --accent-foreground: 222 84% 4%;
+
+    /* Muted */
+    --muted: 215 25% 12%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Trading Specific Colors */
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 98%;
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 98%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 222 84% 4%;
+
+    /* Borders and Inputs */
+    --border: 215 25% 20%;
+    --input: 215 25% 18%;
+    --ring: 217 91% 59%;
+
+    /* Spacing and Sizing */
+    --radius: 8px;
+    --container-padding: 1rem;
+    --container-max-width: 1400px;
+    --content-max-width: 1200px;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+  .light {
+    /* Light Mode - Professional Trading Light Theme */
+    --background: 0 0% 99%;
+    --foreground: 222 84% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 5%;
+
+    --primary: 217 91% 55%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 84% 5%;
+
+    --accent: 45 90% 50%;
+    --accent-foreground: 0 0% 98%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 55%;
   }
 }
 
+/* Base Styles with Modern Defaults */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+
+  /* Modern Focus Styles */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring/60 rounded-md;
+  }
+
+  /* Enhanced Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight leading-tight;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl lg:text-2xl;
+  }
+
+  h5 {
+    @apply text-base md:text-lg lg:text-xl;
+  }
+
+  h6 {
+    @apply text-sm md:text-base lg:text-lg;
   }
 }
 
+/* Container System */
 @layer components {
-  .hover-lift {
-    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+  .container {
+    width: 100%;
+    max-width: var(--container-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
   }
 
-  .glass-effect {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  .content-container {
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  /* Modern Glass Effects */
+  .glass-card {
+    background: hsla(var(--card), 0.95);
+    backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid hsla(var(--border), 0.3);
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold;
+    @apply rounded-lg transition-all duration-200 ease-in-out;
+    @apply focus:ring-2 active:scale-95;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .btn-primary:hover {
+    background-color: hsl(217 91% 65%);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .btn-primary:focus {
+    --tw-ring-color: hsl(var(--primary) / 0.5);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold;
+    @apply rounded-lg transition-all duration-200 ease-in-out;
+    @apply focus:ring-2 active:scale-95;
+    background-color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .btn-secondary:hover {
+    background-color: hsl(215 25% 20%);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .btn-secondary:focus {
+    --tw-ring-color: hsl(var(--secondary) / 0.5);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold;
+    @apply bg-transparent rounded-lg transition-all duration-200 ease-in-out;
+    @apply active:scale-95;
+    color: hsl(var(--foreground));
+  }
+
+  .btn-ghost:hover {
+    background-color: hsl(var(--accent) / 0.1);
+    color: hsl(var(--accent-foreground));
+  }
+
+  /* Trading Components */
+  .trading-card {
+    @apply glass-card p-6 rounded-xl;
+    border-left: 4px solid hsl(var(--primary));
+  }
+
+  .risk-indicator {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply transition-all duration-200;
+  }
+
+  .risk-low {
+    background: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.2);
+  }
+
+  .risk-medium {
+    background: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.2);
+  }
+
+  .risk-high {
+    background: hsl(var(--danger) / 0.1);
+    color: hsl(var(--danger));
+    border: 1px solid hsl(var(--danger) / 0.2);
+  }
+
+  /* Section Spacing */
+  .section {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  .section-header {
+    @apply text-center mb-12 md:mb-16;
+  }
+
+  /* Grid Systems */
+  .feature-grid {
+    @apply grid gap-6 md:gap-8;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .stats-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-6;
+  }
+
+  /* Text Styles */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .animate-delay-50 {
+    animation-delay: 0.05s;
+  }
+
+  .animate-delay-100 {
+    animation-delay: 0.1s;
+  }
+
+  .animate-delay-150 {
+    animation-delay: 0.15s;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .animate-delay-250 {
+    animation-delay: 0.25s;
+  }
+
+  .animate-delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .animate-delay-350 {
+    animation-delay: 0.35s;
+  }
+
+  .animate-delay-400 {
+    animation-delay: 0.4s;
+  }
+
+  .animate-delay-450 {
+    animation-delay: 0.45s;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 0.5s;
   }
 }
 
-/* Custom animations for trading platform */
-@keyframes pulse-risk {
+/* Keyframe Animations */
+@keyframes fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
 
   0%,
   100% {
-    opacity: 1;
+    box-shadow: 0 0 5px hsla(var(--primary), 0.3);
   }
 
   50% {
-    opacity: 0.7;
+    box-shadow: 0 0 20px hsla(var(--primary), 0.6), 0 0 30px hsla(var(--primary), 0.4);
   }
 }
 
-.animate-pulse-risk {
-  animation: pulse-risk 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes bounce-subtle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
-/* Trading desk theme styling */
-.trading-desk {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  min-height: 100vh;
+/* Utility Classes */
+@layer utilities {
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
+  }
+
+  .shadow-glow-success {
+    box-shadow: 0 0 20px hsl(var(--success) / 0.15);
+  }
+
+  .shadow-glow-danger {
+    box-shadow: 0 0 20px hsl(var(--danger) / 0.15);
+  }
+
+  .shadow-glow-accent {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.15);
+  }
 }
 
-/* Hover effects for cards */
-.hover-lift {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+/* Responsive Design */
+@media (min-width: 640px) {
+  :root {
+    --container-padding: 1.5rem;
+  }
 }
 
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 2rem;
+  }
 }
 
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

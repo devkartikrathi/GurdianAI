@@ -25,7 +25,10 @@ import {
   Brain,
   Eye,
   Timer,
-  Loader2
+  Loader2,
+  Sparkles,
+  Gauge,
+  Database
 } from 'lucide-react'
 
 interface PerformanceMetrics {
@@ -180,17 +183,17 @@ export default function AnalyticsPage() {
   }, [loadAnalyticsData])
 
   const getPerformanceColor = (value: number) => {
-    if (value > 0) return 'text-green-600'
-    if (value < 0) return 'text-red-600'
-    return 'text-gray-600'
+    if (value > 0) return 'text-success'
+    if (value < 0) return 'text-danger'
+    return 'text-muted-foreground'
   }
 
   const getRiskLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-green-100 text-green-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'high': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'low': return 'bg-success/10 text-success border-success/20'
+      case 'medium': return 'bg-warning/10 text-warning border-warning/20'
+      case 'high': return 'bg-danger/10 text-danger border-danger/20'
+      default: return 'bg-muted text-muted-foreground border-border'
     }
   }
 
@@ -205,9 +208,9 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="flex items-center justify-center min-h-[400px] p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <span className="text-muted-foreground">Loading analytics...</span>
         </div>
       </div>
@@ -215,41 +218,48 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground">Deep insights into your trading performance and behavioral patterns</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Analytics</h1>
+              <p className="text-muted-foreground">Deep insights into your trading performance and behavioral patterns</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" className="hidden sm:flex">
+              <Calendar className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Performance Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getPerformanceColor(performanceMetrics.totalPnl)}`}>
+            <div className={`text-xl md:text-2xl font-bold ${getPerformanceColor(performanceMetrics.totalPnl)}`}>
               ₹{performanceMetrics.totalPnl.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -258,13 +268,13 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+            <div className="text-xl md:text-2xl font-bold text-foreground">
               {performanceMetrics.winRate}%
             </div>
             <p className="text-xs text-muted-foreground">
@@ -273,13 +283,13 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Max Drawdown</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl md:text-2xl font-bold text-danger">
               {performanceMetrics.maxDrawdown}%
             </div>
             <p className="text-xs text-muted-foreground">
@@ -288,13 +298,13 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sharpe Ratio</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+            <div className="text-xl md:text-2xl font-bold text-foreground">
               {performanceMetrics.sharpeRatio}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -306,24 +316,27 @@ export default function AnalyticsPage() {
 
       {/* Main Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="emotional-zones">Emotional Zones</TabsTrigger>
           <TabsTrigger value="symbol-analysis">Symbol Analysis</TabsTrigger>
           <TabsTrigger value="risk-analytics">Risk Analytics</TabsTrigger>
-          <TabsTrigger value="behavioral-insights">Behavioral Insights</TabsTrigger>
+          <TabsTrigger value="behavioral-insights">AI Insights</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <Card className="glass-card hover-lift">
               <CardHeader>
-                <CardTitle>Performance Trends</CardTitle>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <CardTitle>Performance Trends</CardTitle>
+                </div>
                 <CardDescription>Your trading performance over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
+                <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg border border-border/50">
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Performance chart will be displayed here</p>
@@ -332,13 +345,16 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card hover-lift">
               <CardHeader>
-                <CardTitle>Trade Distribution</CardTitle>
+                <div className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-accent" />
+                  <CardTitle>Trade Distribution</CardTitle>
+                </div>
                 <CardDescription>Winning vs losing trades breakdown</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
+                <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg border border-border/50">
                   <div className="text-center">
                     <PieChart className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Trade distribution chart will be displayed here</p>
@@ -351,24 +367,27 @@ export default function AnalyticsPage() {
 
         {/* Emotional Zones Tab */}
         <TabsContent value="emotional-zones" className="space-y-4">
-          <Card>
+          <Card className="glass-card hover-lift">
             <CardHeader>
-              <CardTitle>Emotional Trading Zones</CardTitle>
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-accent" />
+                <CardTitle>Emotional Trading Zones</CardTitle>
+              </div>
               <CardDescription>Performance by time of day - identify your best and worst trading hours</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {emotionalZones.length > 0 ? (
                   emotionalZones.map((zone, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border/50 rounded-lg bg-card/50">
+                      <div className="flex items-center gap-4 mb-2 sm:mb-0">
                         <div className="w-20 text-sm font-medium">{zone.timeSlot}</div>
                         <Badge className={getRiskLevelColor(zone.riskLevel)}>
                           {zone.riskLevel.toUpperCase()}
                         </Badge>
                       </div>
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
+                      <div className="flex items-center gap-4 sm:gap-6">
+                        <div className="text-center">
                           <div className={`text-lg font-semibold ${getPerformanceColor(zone.performance)}`}>
                             {zone.performance > 0 ? '+' : ''}{zone.performance}%
                           </div>
@@ -376,7 +395,7 @@ export default function AnalyticsPage() {
                             {zone.tradeCount} trades
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-center">
                           <div className={`text-sm font-medium ${getPerformanceColor(zone.avgPnl)}`}>
                             ₹{zone.avgPnl}
                           </div>
@@ -398,23 +417,26 @@ export default function AnalyticsPage() {
 
         {/* Symbol Analysis Tab */}
         <TabsContent value="symbol-analysis" className="space-y-4">
-          <Card>
+          <Card className="glass-card hover-lift">
             <CardHeader>
-              <CardTitle>Symbol Performance Analysis</CardTitle>
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-success" />
+                <CardTitle>Symbol Performance Analysis</CardTitle>
+              </div>
               <CardDescription>How you perform across different trading instruments</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {symbolAnalysis.length > 0 ? (
                   symbolAnalysis.map((symbol, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border/50 rounded-lg bg-card/50">
+                      <div className="flex items-center gap-4 mb-2 sm:mb-0">
                         <div className="w-20 text-sm font-bold">{symbol.symbol}</div>
                         <div className="text-sm text-muted-foreground">
                           {symbol.totalTrades} trades
                         </div>
                       </div>
-                      <div className="flex items-center space-x-6">
+                      <div className="flex items-center gap-4 sm:gap-6">
                         <div className="text-center">
                           <div className="text-sm font-medium">{symbol.winRate}%</div>
                           <div className="text-xs text-muted-foreground">Win Rate</div>
@@ -447,10 +469,13 @@ export default function AnalyticsPage() {
 
         {/* Risk Analytics Tab */}
         <TabsContent value="risk-analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <Card className="glass-card hover-lift">
               <CardHeader>
-                <CardTitle>Risk Metrics</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-warning" />
+                  <CardTitle>Risk Metrics</CardTitle>
+                </div>
                 <CardDescription>Current risk exposure and management</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -462,7 +487,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Max Drawdown</span>
-                  <span className="font-semibold text-red-600">
+                  <span className="font-semibold text-danger">
                     {riskMetrics.maxDrawdown}%
                   </span>
                 </div>
@@ -481,13 +506,16 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card hover-lift">
               <CardHeader>
-                <CardTitle>Risk Timeline</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Gauge className="h-5 w-5 text-accent" />
+                  <CardTitle>Risk Timeline</CardTitle>
+                </div>
                 <CardDescription>Risk exposure over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-48 flex items-center justify-center bg-muted rounded-lg">
+                <div className="h-48 flex items-center justify-center bg-muted/50 rounded-lg border border-border/50">
                   <div className="text-center">
                     <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Risk timeline chart will be displayed here</p>
@@ -500,34 +528,37 @@ export default function AnalyticsPage() {
 
         {/* Behavioral Insights Tab */}
         <TabsContent value="behavioral-insights" className="space-y-4">
-          <Card>
+          <Card className="glass-card hover-lift">
             <CardHeader>
-              <CardTitle>Guardian AI Insights</CardTitle>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <CardTitle>Guardian AI Insights</CardTitle>
+              </div>
               <CardDescription>AI-powered behavioral analysis and recommendations</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {behavioralInsights.map((insight, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-start space-x-3">
+                  <div key={index} className="p-4 border border-border/50 rounded-lg bg-card/50">
+                    <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-full ${
-                        insight.impact === 'positive' ? 'bg-green-100 text-green-600' :
-                        insight.impact === 'negative' ? 'bg-red-100 text-red-600' :
-                        'bg-blue-100 text-blue-600'
+                        insight.impact === 'positive' ? 'bg-success/10 text-success' :
+                        insight.impact === 'negative' ? 'bg-danger/10 text-danger' :
+                        'bg-primary/10 text-primary'
                       }`}>
                         {getInsightIcon(insight.type)}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                           <h4 className="font-semibold">{insight.title}</h4>
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="w-fit">
                             {insight.confidence}% confidence
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           {insight.description}
                         </p>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <Shield className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm font-medium">Recommendation:</span>
                           <span className="text-sm text-muted-foreground">{insight.recommendation}</span>

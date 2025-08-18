@@ -17,7 +17,11 @@ import {
   AlertTriangle,
   TrendingUp,
   DollarSign,
-  CheckCircle
+  CheckCircle,
+  Settings as SettingsIcon,
+  Sparkles,
+  Gauge,
+  Zap
 } from 'lucide-react'
 
 interface RiskProfile {
@@ -156,17 +160,20 @@ export default function SettingsPage() {
 
   if (userLoading || isLoadingRisk) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-muted-foreground">Loading settings...</div>
+      <div className="flex items-center justify-center min-h-[400px] p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <span className="text-muted-foreground">Loading settings...</span>
+        </div>
       </div>
     )
   }
 
   if (userError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] p-4 md:p-6">
         <div className="text-center">
-          <p className="text-destructive mb-2">Error loading user data</p>
+          <p className="text-danger mb-2">Error loading user data</p>
           <p className="text-sm text-muted-foreground">{userError}</p>
         </div>
       </div>
@@ -174,30 +181,35 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Manage your account and preferences</p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground">Manage your account and preferences</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* User Profile */}
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Profile
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              <CardTitle>Profile</CardTitle>
+            </div>
             <CardDescription>
               Manage your account information and preferences
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <div>
                 <Label htmlFor="name">Name</Label>
                 <Input 
                   id="name" 
@@ -206,7 +218,7 @@ export default function SettingsPage() {
                   onChange={(e) => handleUserProfileChange('name', e.target.value)}
                 />
               </div>
-              <div className="flex-1">
+              <div>
                 <Label htmlFor="email">Email</Label>
                 <Input 
                   id="email" 
@@ -235,7 +247,7 @@ export default function SettingsPage() {
               )}
             </Button>
             {profileSaveSuccess && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex items-center gap-2 text-success text-sm">
                 <CheckCircle className="h-4 w-4" />
                 Profile updated successfully!
               </div>
@@ -244,18 +256,18 @@ export default function SettingsPage() {
         </Card>
 
         {/* Risk Profile */}
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Risk Profile
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-accent" />
+              <CardTitle>Risk Profile</CardTitle>
+            </div>
             <CardDescription>
               Configure your trading risk parameters for Guardian AI
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <div>
                 <Label htmlFor="totalCapital">Total Capital</Label>
                 <div className="relative">
@@ -280,7 +292,7 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <div>
                 <Label htmlFor="maxConsecutiveLosses">Max Consecutive Losses</Label>
                 <Input
@@ -319,7 +331,7 @@ export default function SettingsPage() {
               )}
             </Button>
             {saveSuccess && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex items-center gap-2 text-success text-sm">
                 <CheckCircle className="h-4 w-4" />
                 Risk profile saved successfully!
               </div>
@@ -328,28 +340,37 @@ export default function SettingsPage() {
         </Card>
 
         {/* Notifications */}
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-warning" />
+              <CardTitle>Notifications</CardTitle>
+            </div>
             <CardDescription>
               Configure your notification preferences
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="riskAlerts">Risk Alerts</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                <div>
+                  <Label htmlFor="riskAlerts" className="font-medium">Risk Alerts</Label>
+                  <p className="text-xs text-muted-foreground">Get notified of high-risk situations</p>
+                </div>
                 <input type="checkbox" id="riskAlerts" defaultChecked className="rounded" />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="dailyDigest">Daily Performance Digest</Label>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                <div>
+                  <Label htmlFor="dailyDigest" className="font-medium">Daily Performance Digest</Label>
+                  <p className="text-xs text-muted-foreground">Daily summary of your trading performance</p>
+                </div>
                 <input type="checkbox" id="dailyDigest" defaultChecked className="rounded" />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="weeklyReport">Weekly Analytics Report</Label>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                <div>
+                  <Label htmlFor="weeklyReport" className="font-medium">Weekly Analytics Report</Label>
+                  <p className="text-xs text-muted-foreground">Detailed weekly performance analysis</p>
+                </div>
                 <input type="checkbox" id="weeklyReport" className="rounded" />
               </div>
             </div>
@@ -357,23 +378,23 @@ export default function SettingsPage() {
         </Card>
 
         {/* Data Management */}
-        <Card>
+        <Card className="glass-card hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Data Management
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-success" />
+              <CardTitle>Data Management</CardTitle>
+            </div>
             <CardDescription>
               Manage your trading data and privacy settings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Button variant="outline" className="w-full justify-start">
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Export Trading Data
               </Button>
-              <Button variant="outline" className="w-full justify-start text-destructive">
+              <Button variant="outline" className="w-full justify-start text-danger hover:text-danger">
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Delete All Data
               </Button>
@@ -383,15 +404,18 @@ export default function SettingsPage() {
       </div>
 
       {/* Advanced Settings */}
-      <Card>
+      <Card className="glass-card hover-lift">
         <CardHeader>
-          <CardTitle>Advanced Settings</CardTitle>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-accent" />
+            <CardTitle>Advanced Settings</CardTitle>
+          </div>
           <CardDescription>
             Advanced configuration options for power users
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
             <div>
               <Label htmlFor="apiKey">Zerodha API Key</Label>
               <Input id="apiKey" type="password" placeholder="Enter your Zerodha API key" />

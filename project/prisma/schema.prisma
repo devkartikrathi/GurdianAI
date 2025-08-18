@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -15,10 +15,10 @@ model User {
   clerkUserId          String   @unique @map("clerk_user_id")
   email                String   @unique
   name                 String
-  totalCapital         Decimal  @default(0) @map("total_capital") @db.Decimal(15, 2)
-  maxDailyDrawdownPct  Decimal  @default(2.0) @map("max_daily_drawdown_pct") @db.Decimal(5, 2)
+  totalCapital         Float    @default(0) @map("total_capital")
+  maxDailyDrawdownPct  Float    @default(2.0) @map("max_daily_drawdown_pct")
   maxConsecutiveLosses Int      @default(3) @map("max_consecutive_losses")
-  riskPerTradePct      Decimal  @default(1.0) @map("risk_per_trade_pct") @db.Decimal(5, 2)
+  riskPerTradePct      Float    @default(1.0) @map("risk_per_trade_pct")
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")
 
@@ -67,7 +67,7 @@ model TradeBook {
   uploadTimestamp DateTime @default(now()) @map("upload_timestamp")
   parsed          Boolean  @default(false)
   totalRows       Int      @default(0) @map("total_rows")
-  schemaMapping   Json?    @map("schema_mapping")
+  schemaMapping   String?  @map("schema_mapping")
 
   // Relations
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -83,8 +83,8 @@ model RawTrade {
   symbol        String
   tradeType     String   @map("trade_type")
   quantity      Int
-  price         Decimal  @db.Decimal(10, 2)
-  amount        Decimal  @db.Decimal(15, 2)
+  price         Float
+  amount        Float
   tradeDatetime DateTime @map("trade_datetime")
   source        String   @default("csv")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -101,14 +101,14 @@ model MatchedTrade {
   userId           String   @map("user_id")
   symbol           String
   quantity         Int
-  buyPrice         Decimal  @map("buy_price") @db.Decimal(10, 2)
-  sellPrice        Decimal  @map("sell_price") @db.Decimal(10, 2)
-  pnl              Decimal  @db.Decimal(15, 2)
-  pnlPct           Decimal  @map("pnl_pct") @db.Decimal(8, 4)
+  buyPrice         Float    @map("buy_price")
+  sellPrice        Float    @map("sell_price")
+  pnl              Float
+  pnlPct           Float    @map("pnl_pct")
   buyDatetime      DateTime @map("buy_datetime")
   sellDatetime     DateTime @map("sell_datetime")
-  duration         String // PostgreSQL interval type
-  tradeSessionDate DateTime @map("trade_session_date") @db.Date
+  duration         String // SQLite text type
+  tradeSessionDate DateTime @map("trade_session_date")
   createdAt        DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -122,7 +122,7 @@ model OpenTrade {
   userId      String   @map("user_id")
   symbol      String
   quantity    Int
-  buyPrice    Decimal  @map("buy_price") @db.Decimal(10, 2)
+  buyPrice    Float    @map("buy_price")
   buyDatetime DateTime @map("buy_datetime")
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -135,7 +135,7 @@ model TodayTrade {
   symbol        String
   tradeType     String   @map("trade_type")
   quantity      Int
-  price         Decimal  @db.Decimal(10, 2)
+  price         Float
   tradeDatetime DateTime @map("trade_datetime")
   source        String   @default("zerodha_api")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -147,8 +147,8 @@ model GuardianInsight {
   id              String   @id @default(cuid())
   userId          String   @map("user_id")
   insightType     String   @map("insight_type")
-  insightData     Json     @map("insight_data")
-  confidenceScore Decimal? @map("confidence_score") @db.Decimal(3, 2)
+  insightData     String   @map("insight_data")
+  confidenceScore Float?   @map("confidence_score")
   tradesAnalyzed  Int      @map("trades_analyzed")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -162,10 +162,10 @@ model GuardianInsight {
 model RiskSession {
   id                 String    @id @default(cuid())
   userId             String    @map("user_id")
-  sessionDate        DateTime  @map("session_date") @db.Date
+  sessionDate        DateTime  @map("session_date")
   tradesCount        Int       @default(0) @map("trades_count")
-  currentPnl         Decimal   @default(0) @map("current_pnl") @db.Decimal(15, 2)
-  currentDrawdownPct Decimal   @default(0) @map("current_drawdown_pct") @db.Decimal(5, 2)
+  currentPnl         Float     @default(0) @map("current_pnl")
+  currentDrawdownPct Float     @default(0) @map("current_drawdown_pct")
   consecutiveLosses  Int       @default(0) @map("consecutive_losses")
   lastTradeTime      DateTime? @map("last_trade_time")
   riskStatus         String    @default("green") @map("risk_status")
@@ -185,9 +185,9 @@ model UserTradingSummary {
   userId         String    @map("user_id")
   version        Int
   generatedAt    DateTime  @default(now()) @map("generated_at")
-  dataRangeStart DateTime  @map("data_range_start") @db.Date
-  dataRangeEnd   DateTime  @map("data_range_end") @db.Date
-  summaryData    Json      @map("summary_data")
+  dataRangeStart DateTime  @map("data_range_start")
+  dataRangeEnd   DateTime  @map("data_range_end")
+  summaryData    String    @map("summary_data")
   insightsHash   String?   @map("insights_hash")
   nextUpdateDue  DateTime? @map("next_update_due")
   createdAt      DateTime  @default(now()) @map("created_at")

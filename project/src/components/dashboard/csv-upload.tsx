@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Bot, Sparkles } from 'lucide-react';
 import { CSVSchema, TradeUploadResult } from '@/types/trading';
 import { toast } from 'sonner';
 
@@ -61,9 +61,17 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       setStep('mapping');
       
       if (schema.confidence_score >= 0.8) {
-        toast.success('Schema detected with high confidence!');
+        toast.success('AI detected schema with high confidence!', {
+          description: 'Please verify the column mapping below.'
+        });
+      } else if (schema.confidence_score >= 0.6) {
+        toast.warning('AI detected schema with medium confidence', {
+          description: 'Please review and adjust the column mapping.'
+        });
       } else {
-        toast.warning('Schema detected but please verify the mapping');
+        toast.error('AI had difficulty detecting the schema', {
+          description: 'Please manually map the columns below.'
+        });
       }
     } catch (error) {
       console.error('Schema detection error:', error);
@@ -82,19 +90,30 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       formData.append('file', selectedFile);
       formData.append('columnMapping', JSON.stringify(columnMapping));
 
+      // Debug logging
+      console.log('Uploading with column mapping:', columnMapping);
+      console.log('FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+
       const response = await fetch('/api/trades/upload', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        console.error('Upload error response:', errorData);
+        throw new Error(errorData.error || 'Upload failed');
       }
 
       const result: TradeUploadResult = await response.json();
       
       if (result.success) {
-        toast.success(`Successfully processed ${result.total_trades} trades!`);
+        toast.success(`Successfully processed ${result.total_trades} trades!`, {
+          description: `Matched ${result.matched_trades} trades, ${result.open_positions} open positions`
+        });
         onUploadComplete(result);
         resetUpload();
       } else {
@@ -102,7 +121,7 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload trades');
+      toast.error('Failed to upload trades: ' + (error as Error).message);
     } finally {
       setIsUploading(false);
     }
@@ -152,7 +171,7 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
                   Drag & drop your CSV file here, or click to select
                 </p>
                 <p className="text-sm text-gray-500">
-                  Supports CSV files from brokers like Zerodha, Upstox, etc.
+                  Our AI will automatically detect and map your columns
                 </p>
               </div>
             )}
@@ -166,7 +185,13 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
                 <span className="text-sm text-gray-500">
                   ({(selectedFile.size / 1024).toFixed(1)} KB)
                 </span>
-                {isDetecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isDetecting && (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Bot className="h-4 w-4 text-blue-500 animate-pulse" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-blue-600">AI analyzing...</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -183,14 +208,21 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
             <CheckCircle className="h-5 w-5 text-green-500" />
             Verify Column Mapping
           </CardTitle>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>Confidence Score: </span>
-            <span className={`font-medium ${
-              schema.confidence_score >= 0.8 ? 'text-green-600' : 
-              schema.confidence_score >= 0.6 ? 'text-amber-600' : 'text-red-600'
-            }`}>
-              {Math.round(schema.confidence_score * 100)}%
-            </span>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4 text-blue-500" />
+              <span className="text-gray-600">AI Confidence: </span>
+              <span className={`font-medium ${
+                schema.confidence_score >= 0.8 ? 'text-green-600' : 
+                schema.confidence_score >= 0.6 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {Math.round(schema.confidence_score * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              <span className="text-gray-600">Columns Found: {schema.columns.length}</span>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -221,8 +253,42 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
                     </option>
                   ))}
                 </select>
+                {columnMapping[field.key] && (
+                  <div className="text-xs text-gray-500">
+                    Mapped to: <span className="font-medium">{columnMapping[field.key]}</span>
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+
+          {/* Sample Data Preview */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium mb-3">Sample Data Preview</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    {schema.columns.slice(0, 6).map((col) => (
+                      <th key={col.name} className="text-left p-2 font-medium">
+                        {col.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {schema.columns[0]?.sample_values.slice(0, 3).map((_, rowIndex) => (
+                    <tr key={rowIndex} className="border-b">
+                      {schema.columns.slice(0, 6).map((col) => (
+                        <td key={col.name} className="p-2 text-gray-600">
+                          {col.sample_values[rowIndex] || '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t">

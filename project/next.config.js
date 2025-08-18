@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  cleanDistDir: true,
   serverExternalPackages: ['@supabase/supabase-js'],
   images: {
     remotePatterns: [

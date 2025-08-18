@@ -1,68 +1,132 @@
 import { SignIn } from '@clerk/nextjs'
-import { Shield, ArrowLeft } from 'lucide-react'
+import { Shield, ArrowLeft, Sparkles, Bot, Gauge, Database } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 flex flex-col">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '4rem 4rem',
+            maskImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 110%)'
+          }}
+        />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-success/5 rounded-full blur-3xl animate-bounce-subtle" style={{ transform: 'translate(-50%, -50%)', animationDelay: '0.5s' }} />
+      </div>
+
       {/* Navigation */}
-      <nav className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Home</span>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <Shield className="h-8 w-8 text-blue-400" />
-            <span className="text-2xl font-bold text-white">Guardian AI</span>
+      <nav className="glass-card sticky top-0 z-50 backdrop-blur-2xl border-b border-primary/10 mb-0">
+        <div className="container">
+          <div className="flex items-center justify-between py-4">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-30 group-hover:opacity-60 transition-opacity"></div>
+                <div className="relative bg-background/90 p-2 rounded-lg">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gradient-primary">Guardian AI</span>
+                <span className="text-xs text-muted-foreground font-mono">TRADING PSYCHOLOGY</span>
+              </div>
+            </Link>
+            
+            <Link href="/" className="btn-ghost group">
+              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+              Back to Home
+            </Link>
           </div>
         </div>
       </nav>
 
-      {/* Sign In Section - Centered */}
-      <div className="flex-1 flex items-center justify-center px-4">
+      {/* Sign In Section */}
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-400">Sign in to continue your trading journey with Guardian AI</p>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">Welcome Back</span>
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Sign in to <span className="text-gradient-primary">Guardian AI</span>
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Continue your trading journey with AI-powered behavioral analysis and real-time risk monitoring
+            </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
+          <div className="glass-card p-8 rounded-2xl hover-lift">
             <SignIn 
               appearance={{
+                baseTheme: undefined,
+                variables: {
+                  colorPrimary: 'hsl(217, 91%, 59%)',
+                  colorBackground: 'transparent',
+                  colorText: 'hsl(0, 0%, 98%)',
+                  colorInputBackground: 'hsl(215, 25%, 18%)',
+                  colorInputText: 'hsl(0, 0%, 98%)',
+                  borderRadius: '8px',
+                },
                 elements: {
                   rootBox: "w-full",
                   card: "bg-transparent shadow-none",
-                  headerTitle: "text-white text-2xl font-bold",
-                  headerSubtitle: "text-gray-400",
-                  formButtonPrimary: "bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors",
-                  formFieldInput: "bg-white/10 border border-white/20 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:border-blue-400 focus:ring-blue-400",
-                  formFieldLabel: "text-white font-medium",
-                  dividerLine: "bg-white/20",
-                  dividerText: "text-gray-400",
-                  socialButtonsBlockButton: "bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors",
-                  socialButtonsBlockButtonText: "text-white",
-                  formFieldLabelRow: "text-white",
+                  headerTitle: "text-foreground text-2xl font-bold",
+                  headerSubtitle: "text-muted-foreground",
+                  formButtonPrimary: "btn-primary w-full",
+                  formFieldInput: "bg-input border-border text-foreground placeholder-muted-foreground rounded-lg px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200",
+                  formFieldLabel: "text-foreground font-medium",
+                  dividerLine: "bg-border",
+                  dividerText: "text-muted-foreground",
+                  socialButtonsBlockButton: "border border-border hover:bg-accent/10 transition-all duration-200",
+                  socialButtonsBlockButtonText: "text-foreground",
+                  formFieldLabelRow: "text-foreground",
                   formFieldRow: "mb-4",
-                  formResendCodeLink: "text-blue-400 hover:text-blue-300",
-                  identityPreviewText: "text-white",
-                  identityPreviewEditButton: "text-blue-400 hover:text-blue-300",
-                  formFieldAction: "text-blue-400 hover:text-blue-300",
-                  footer: "text-gray-400",
-                  footerAction: "text-gray-400",
-                  footerActionLink: "text-blue-400 hover:text-blue-300"
+                  formResendCodeLink: "text-primary hover:text-primary/80",
+                  identityPreviewText: "text-foreground",
+                  identityPreviewEditButton: "text-primary hover:text-primary/80",
+                  formFieldAction: "text-primary hover:text-primary/80",
+                  footer: "text-muted-foreground",
+                  footerAction: "text-muted-foreground",
+                  footerActionLink: "text-primary hover:text-primary/80"
                 }
               }}
             />
           </div>
 
           <div className="text-center mt-8">
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Don't have an account?{' '}
-              <Link href="/sign-up" className="text-blue-400 hover:text-blue-300 font-semibold">
+              <Link href="/sign-up" className="text-primary hover:text-primary/80 font-semibold transition-colors">
                 Sign up for free
               </Link>
             </p>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-12 grid grid-cols-3 gap-4 text-center">
+            <div className="glass-card p-4 rounded-lg">
+              <Shield className="h-6 w-6 text-primary mx-auto mb-2" />
+              <div className="text-xs text-muted-foreground">Bank-grade Security</div>
+            </div>
+            <div className="glass-card p-4 rounded-lg">
+              <Bot className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs text-muted-foreground">AI-Powered</div>
+            </div>
+            <div className="glass-card p-4 rounded-lg">
+              <Gauge className="h-6 w-6 text-success mx-auto mb-2" />
+              <div className="text-xs text-muted-foreground">Real-time Monitoring</div>
+            </div>
           </div>
         </div>
       </div>
