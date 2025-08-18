@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileSize: file.size,
         totalRows: rows.length,
-        schemaMapping: JSON.stringify(columnMapping),
+        schemaMapping: columnMapping,
         parsed: false
       }
     })
@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < trades.length; i += batchSize) {
       const batch = trades.slice(i, i + batchSize)
       const batchResult = await prisma.rawTrade.createMany({
-        data: batch
+        data: batch,
+        skipDuplicates: true
       })
       insertedTrades.push(...batch)
     }
@@ -285,7 +286,8 @@ async function processMatchedTrades(userId: string, trades: any[]) {
   // Insert matched trades
   if (matchedTrades.length > 0) {
     const batchResult = await prisma.matchedTrade.createMany({
-      data: matchedTrades
+      data: matchedTrades,
+      skipDuplicates: true
     })
   }
 

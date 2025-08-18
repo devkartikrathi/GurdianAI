@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export interface UserProfile {
     id: string
@@ -54,7 +55,13 @@ export class UserService {
             return null
         }
 
-        return user
+        // Convert Decimal to number
+        return {
+            ...user,
+            totalCapital: Number(user.totalCapital),
+            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+            riskPerTradePct: Number(user.riskPerTradePct),
+        }
     }
 
     static async getUserByEmail(email: string): Promise<UserProfile | null> {
@@ -78,7 +85,13 @@ export class UserService {
             return null
         }
 
-        return user
+        // Convert Decimal to number
+        return {
+            ...user,
+            totalCapital: Number(user.totalCapital),
+            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+            riskPerTradePct: Number(user.riskPerTradePct),
+        }
     }
 
     static async createUser(data: CreateUserData): Promise<UserProfile> {
@@ -106,7 +119,13 @@ export class UserService {
             }
         })
 
-        return user
+        // Convert Decimal to number
+        return {
+            ...user,
+            totalCapital: Number(user.totalCapital),
+            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+            riskPerTradePct: Number(user.riskPerTradePct),
+        }
     }
 
     static async updateUser(clerkUserId: string, data: UpdateUserData): Promise<UserProfile> {
@@ -134,7 +153,13 @@ export class UserService {
             }
         })
 
-        return user
+        // Convert Decimal to number
+        return {
+            ...user,
+            totalCapital: Number(user.totalCapital),
+            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+            riskPerTradePct: Number(user.riskPerTradePct),
+        }
     }
 
     static async deleteUser(clerkUserId: string): Promise<void> {
@@ -162,7 +187,24 @@ export class UserService {
             return null
         }
 
-        return user
+        return {
+            ...user,
+            totalCapital: Number(user.totalCapital),
+            maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+            riskPerTradePct: Number(user.riskPerTradePct),
+            matchedTrades: user.matchedTrades.map(trade => ({
+                ...trade,
+                pnl: Number(trade.pnl),
+                pnlPct: Number(trade.pnlPct),
+                buyPrice: Number(trade.buyPrice),
+                sellPrice: Number(trade.sellPrice),
+            })),
+            riskSessions: user.riskSessions.map(session => ({
+                ...session,
+                currentPnl: Number(session.currentPnl),
+                currentDrawdownPct: Number(session.currentDrawdownPct),
+            }))
+        }
     }
 
     static async userExists(clerkUserId: string): Promise<boolean> {

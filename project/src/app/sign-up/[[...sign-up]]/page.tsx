@@ -71,6 +71,7 @@ export default function Page() {
               
               <div className="glass-card p-8 rounded-2xl hover-lift">
                 <SignUp 
+                  signInUrl="/sign-in"
                   appearance={{
                     baseTheme: undefined,
                     variables: {

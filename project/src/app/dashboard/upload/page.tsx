@@ -41,9 +41,20 @@ export default function UploadPage() {
         complete: async (results) => {
           setParsedData(results.data as any[])
           
-          // Simulate API call
+          // Create column mapping based on CSV headers
+          const headers = results.meta.fields || []
+          const columnMapping = {
+            symbol: headers.find(h => h.toLowerCase().includes('symbol')) || 'symbol',
+            trade_type: headers.find(h => h.toLowerCase().includes('trade_type') || h.toLowerCase().includes('type')) || 'trade_type',
+            quantity: headers.find(h => h.toLowerCase().includes('quantity') || h.toLowerCase().includes('qty')) || 'quantity',
+            price: headers.find(h => h.toLowerCase().includes('price')) || 'price',
+            trade_datetime: headers.find(h => h.toLowerCase().includes('datetime') || h.toLowerCase().includes('date') || h.toLowerCase().includes('time')) || 'trade_datetime'
+          }
+
+          // Send API call with column mapping
           const formData = new FormData()
           formData.append('file', file)
+          formData.append('columnMapping', JSON.stringify(columnMapping))
 
           const response = await fetch('/api/trades/upload', {
             method: 'POST',

@@ -1,5 +1,5 @@
 import { SignIn } from '@clerk/nextjs'
-import { Shield, ArrowLeft, Sparkles, Bot, Gauge, Database } from 'lucide-react'
+import { Shield, ArrowLeft, Sparkles, Bot, Gauge } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Page() {
@@ -68,6 +68,8 @@ export default function Page() {
           
           <div className="glass-card p-8 rounded-2xl hover-lift">
             <SignIn 
+              redirectUrl="/dashboard"
+              signUpUrl="/sign-up"
               appearance={{
                 baseTheme: undefined,
                 variables: {
