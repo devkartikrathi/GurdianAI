@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
             // Calculate average trade duration
             const totalDuration = symbolTrades.reduce((sum, trade) => {
-                const duration = new Date(trade.sellDatetime).getTime() - new Date(trade.buyDatetime).getTime()
+                const duration = new Date(trade.sellDate).getTime() - new Date(trade.buyDate).getTime()
                 return sum + duration
             }, 0)
             const avgDuration = totalTrades > 0 ? totalDuration / totalTrades / (1000 * 60 * 60) : 0 // in hours

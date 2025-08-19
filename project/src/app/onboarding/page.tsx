@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { useToast } from '@/hooks/use-toast'
 import { 
   Shield, 
   Upload, 
@@ -18,7 +19,9 @@ import {
   User,
   Target,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  Info
 } from 'lucide-react'
 
 interface OnboardingData {
@@ -31,19 +34,25 @@ interface OnboardingData {
   maxConsecutiveLosses: string
 }
 
+interface ValidationErrors {
+  [key: string]: string
+}
+
 const OnboardingStep1 = ({ 
   onNext, 
   data, 
-  setData 
+  setData,
+  errors
 }: { 
   onNext: () => void
   data: OnboardingData
   setData: React.Dispatch<React.SetStateAction<OnboardingData>>
+  errors: ValidationErrors
 }) => (
   <div className="space-y-6">
     <div className="text-center mb-8">
-      <div className="bg-blue-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <User className="h-8 w-8 text-blue-400" />
+      <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <User className="h-8 w-8 text-primary" />
       </div>
       <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to Guardian AI</h2>
       <p className="text-muted-foreground">Let's set up your profile and get you started</p>
@@ -51,28 +60,32 @@ const OnboardingStep1 = ({
 
     <div className="space-y-4">
       <div>
-        <Label htmlFor="name">Full Name</Label>
+        <Label htmlFor="name">Full Name *</Label>
         <Input 
           id="name" 
           placeholder="Enter your full name" 
           value={data.name}
           onChange={(e) => setData(prev => ({ ...prev, name: e.target.value }))}
+          className={errors.name ? 'border-red-500' : ''}
         />
+        {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
       </div>
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email *</Label>
         <Input 
           id="email" 
           type="email" 
           placeholder="Enter your email" 
           value={data.email}
           onChange={(e) => setData(prev => ({ ...prev, email: e.target.value }))}
+          className={errors.email ? 'border-red-500' : ''}
         />
+        {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
       </div>
       <div>
         <Label htmlFor="experience">Trading Experience</Label>
         <select 
-          className="w-full p-3 border border-input rounded-md bg-background"
+          className={`w-full p-3 border rounded-md bg-background ${errors.experience ? 'border-red-500' : 'border-input'}`}
           value={data.experience}
           onChange={(e) => setData(prev => ({ ...prev, experience: e.target.value }))}
         >
@@ -81,6 +94,7 @@ const OnboardingStep1 = ({
           <option value="intermediate">Intermediate (1-3 years)</option>
           <option value="advanced">Advanced (3+ years)</option>
         </select>
+        {errors.experience && <p className="text-sm text-red-500 mt-1">{errors.experience}</p>}
       </div>
     </div>
 
@@ -88,7 +102,7 @@ const OnboardingStep1 = ({
       <Button 
         onClick={onNext} 
         className="flex items-center"
-        disabled={!data.name || !data.email}
+        disabled={!data.name.trim() || !data.email.trim()}
       >
         Continue
         <ArrowRight className="ml-2 h-4 w-4" />
@@ -101,17 +115,19 @@ const OnboardingStep2 = ({
   onNext, 
   onBack, 
   data, 
-  setData 
+  setData,
+  errors
 }: { 
   onNext: () => void
   onBack: () => void
   data: OnboardingData
   setData: React.Dispatch<React.SetStateAction<OnboardingData>>
+  errors: ValidationErrors
 }) => (
   <div className="space-y-6">
     <div className="text-center mb-8">
-      <div className="bg-purple-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Target className="h-8 w-8 text-purple-400" />
+      <div className="bg-accent/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Target className="h-8 w-8 text-accent" />
       </div>
       <h2 className="text-2xl font-bold text-foreground mb-2">Set Your Risk Profile</h2>
       <p className="text-muted-foreground">Configure your risk tolerance and trading goals</p>
@@ -119,44 +135,72 @@ const OnboardingStep2 = ({
 
     <div className="space-y-4">
       <div>
-        <Label htmlFor="capital">Total Trading Capital</Label>
+        <Label htmlFor="capital">Total Trading Capital (₹) *</Label>
         <Input 
           id="capital" 
           type="number" 
-          placeholder="Enter your total capital" 
+          placeholder="e.g., 100000" 
           value={data.totalCapital}
           onChange={(e) => setData(prev => ({ ...prev, totalCapital: e.target.value }))}
+          className={errors.totalCapital ? 'border-red-500' : ''}
         />
+        {errors.totalCapital && <p className="text-sm text-red-500 mt-1">{errors.totalCapital}</p>}
+        <p className="text-xs text-muted-foreground mt-1">Enter your total available capital for trading</p>
       </div>
       <div>
-        <Label htmlFor="riskPerTrade">Risk Per Trade (%)</Label>
+        <Label htmlFor="riskPerTrade">Risk Per Trade (%) *</Label>
         <Input 
           id="riskPerTrade" 
           type="number" 
-          placeholder="1-5%" 
+          step="0.1"
+          placeholder="1.0" 
           value={data.riskPerTradePct}
           onChange={(e) => setData(prev => ({ ...prev, riskPerTradePct: e.target.value }))}
+          className={errors.riskPerTradePct ? 'border-red-500' : ''}
         />
+        {errors.riskPerTradePct && <p className="text-sm text-red-500 mt-1">{errors.riskPerTradePct}</p>}
+        <p className="text-xs text-muted-foreground mt-1">Recommended: 1-2% of your capital per trade</p>
       </div>
       <div>
-        <Label htmlFor="maxDrawdown">Max Daily Drawdown (%)</Label>
+        <Label htmlFor="maxDrawdown">Max Daily Drawdown (%) *</Label>
         <Input 
           id="maxDrawdown" 
           type="number" 
-          placeholder="5-20%" 
+          step="0.1"
+          placeholder="5.0" 
           value={data.maxDailyDrawdownPct}
           onChange={(e) => setData(prev => ({ ...prev, maxDailyDrawdownPct: e.target.value }))}
+          className={errors.maxDailyDrawdownPct ? 'border-red-500' : ''}
         />
+        {errors.maxDailyDrawdownPct && <p className="text-sm text-red-500 mt-1">{errors.maxDailyDrawdownPct}</p>}
+        <p className="text-xs text-muted-foreground mt-1">Maximum loss allowed per day (5-20%)</p>
       </div>
       <div>
-        <Label htmlFor="maxLosses">Max Consecutive Losses</Label>
+        <Label htmlFor="maxLosses">Max Consecutive Losses *</Label>
         <Input 
           id="maxLosses" 
           type="number" 
-          placeholder="3-10" 
+          placeholder="3" 
           value={data.maxConsecutiveLosses}
           onChange={(e) => setData(prev => ({ ...prev, maxConsecutiveLosses: e.target.value }))}
+          className={errors.maxConsecutiveLosses ? 'border-red-500' : ''}
         />
+        {errors.maxConsecutiveLosses && <p className="text-sm text-red-500 mt-1">{errors.maxConsecutiveLosses}</p>}
+        <p className="text-xs text-muted-foreground mt-1">Stop trading after this many consecutive losses</p>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
+      <div className="flex items-start space-x-3">
+        <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+        <div>
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Risk Management Tips</h4>
+          <ul className="text-sm text-blue-700 dark:text-blue-300 mt-1 space-y-1">
+            <li>• Never risk more than 2% of your capital on a single trade</li>
+            <li>• Set daily loss limits to prevent emotional trading</li>
+            <li>• Take breaks after consecutive losses to reset your mindset</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -168,7 +212,7 @@ const OnboardingStep2 = ({
       <Button 
         onClick={onNext} 
         className="flex items-center"
-        disabled={!data.totalCapital || !data.riskPerTradePct}
+        disabled={!data.totalCapital || !data.riskPerTradePct || !data.maxDailyDrawdownPct || !data.maxConsecutiveLosses}
       >
         Continue
         <ArrowRight className="ml-2 h-4 w-4" />
@@ -186,8 +230,8 @@ const OnboardingStep3 = ({
 }) => (
   <div className="space-y-6">
     <div className="text-center mb-8">
-      <div className="bg-green-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Upload className="h-8 w-8 text-green-400" />
+      <div className="bg-success/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Upload className="h-8 w-8 text-success" />
       </div>
       <h2 className="text-2xl font-bold text-foreground mb-2">Upload Your Trades</h2>
       <p className="text-muted-foreground">Import your trading data to get started with analysis</p>
@@ -240,8 +284,8 @@ const OnboardingStep4 = ({
 }) => (
   <div className="space-y-6">
     <div className="text-center mb-8">
-      <div className="bg-green-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle className="h-8 w-8 text-green-400" />
+      <div className="bg-success/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <CheckCircle className="h-8 w-8 text-success" />
       </div>
       <h2 className="text-2xl font-bold text-foreground mb-2">You're All Set!</h2>
       <p className="text-muted-foreground">Your Guardian AI is ready to help you trade better</p>
@@ -251,7 +295,7 @@ const OnboardingStep4 = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-blue-500" />
+            <Shield className="h-5 w-5 mr-2 text-primary" />
             Risk Management
           </CardTitle>
         </CardHeader>
@@ -265,7 +309,7 @@ const OnboardingStep4 = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2 text-purple-500" />
+            <BarChart3 className="h-5 w-5 mr-2 text-accent" />
             Analytics Ready
           </CardTitle>
         </CardHeader>
@@ -279,7 +323,7 @@ const OnboardingStep4 = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2 text-green-500" />
+            <TrendingUp className="h-5 w-5 mr-2 text-success" />
             AI Coaching
           </CardTitle>
         </CardHeader>
@@ -293,7 +337,7 @@ const OnboardingStep4 = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Settings className="h-5 w-5 mr-2 text-yellow-500" />
+            <Settings className="h-5 w-5 mr-2 text-warning" />
             Customizable
           </CardTitle>
         </CardHeader>
@@ -352,7 +396,9 @@ const steps = [
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<ValidationErrors>({})
   const router = useRouter()
+  const { toast } = useToast()
   
   const [data, setData] = useState<OnboardingData>({
     name: '',
@@ -364,7 +410,68 @@ export default function OnboardingPage() {
     maxConsecutiveLosses: ''
   })
 
+  // Load existing user data if available
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const response = await fetch('/api/onboarding')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.data.user) {
+            setData({
+              name: result.data.user.name || '',
+              email: result.data.user.email || '',
+              experience: result.data.onboarding?.experience || '',
+              totalCapital: result.data.user.totalCapital?.toString() || '',
+              riskPerTradePct: result.data.user.riskPerTradePct?.toString() || '',
+              maxDailyDrawdownPct: result.data.user.maxDailyDrawdownPct?.toString() || '',
+              maxConsecutiveLosses: result.data.user.maxConsecutiveLosses?.toString() || ''
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      }
+    }
+
+    loadUserData()
+  }, [])
+
+  const validateStep = (step: number): boolean => {
+    const newErrors: ValidationErrors = {}
+
+    if (step === 1) {
+      if (!data.name.trim()) newErrors.name = 'Name is required'
+      if (!data.email.trim()) newErrors.email = 'Email is required'
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        newErrors.email = 'Please enter a valid email address'
+      }
+    }
+
+    if (step === 2) {
+      if (!data.totalCapital || parseFloat(data.totalCapital) <= 0) {
+        newErrors.totalCapital = 'Please enter a valid capital amount'
+      }
+      if (!data.riskPerTradePct || parseFloat(data.riskPerTradePct) <= 0 || parseFloat(data.riskPerTradePct) > 10) {
+        newErrors.riskPerTradePct = 'Risk per trade should be between 0.1% and 10%'
+      }
+      if (!data.maxDailyDrawdownPct || parseFloat(data.maxDailyDrawdownPct) <= 0 || parseFloat(data.maxDailyDrawdownPct) > 50) {
+        newErrors.maxDailyDrawdownPct = 'Daily drawdown should be between 0.1% and 50%'
+      }
+      if (!data.maxConsecutiveLosses || parseInt(data.maxConsecutiveLosses) <= 0 || parseInt(data.maxConsecutiveLosses) > 20) {
+        newErrors.maxConsecutiveLosses = 'Max consecutive losses should be between 1 and 20'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleNext = async () => {
+    if (!validateStep(currentStep)) {
+      return
+    }
+
     if (currentStep === 2) {
       // Save data after step 2 (risk profile setup)
       setIsSubmitting(true)
@@ -378,13 +485,23 @@ export default function OnboardingPage() {
         })
 
         if (!response.ok) {
-          throw new Error('Failed to save onboarding data')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to save onboarding data')
         }
+
+        toast({
+          title: "Profile Saved",
+          description: "Your risk profile has been configured successfully!",
+        })
 
         setCurrentStep(currentStep + 1)
       } catch (error) {
         console.error('Error saving onboarding data:', error)
-        // You might want to show an error message to the user
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to save profile",
+          variant: "destructive",
+        })
       } finally {
         setIsSubmitting(false)
       }
@@ -396,6 +513,7 @@ export default function OnboardingPage() {
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
+      setErrors({})
     }
   }
 
@@ -430,6 +548,7 @@ export default function OnboardingPage() {
                 onComplete={handleComplete}
                 data={data}
                 setData={setData}
+                errors={errors}
               />
             )}
           </CardContent>
@@ -444,7 +563,7 @@ export default function OnboardingPage() {
                 step.id === currentStep
                   ? 'bg-primary'
                   : step.id < currentStep
-                  ? 'bg-green-500'
+                  ? 'bg-success'
                   : 'bg-muted'
               }`}
             />
@@ -454,7 +573,8 @@ export default function OnboardingPage() {
         {/* Loading overlay */}
         {isSubmitting && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg">
+            <div className="bg-background p-6 rounded-lg flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <p className="text-foreground">Saving your profile...</p>
             </div>
           </div>

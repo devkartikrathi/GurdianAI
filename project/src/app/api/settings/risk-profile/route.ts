@@ -25,7 +25,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: user
+      data: {
+        totalCapital: Number(user.totalCapital),
+        maxDailyDrawdownPct: Number(user.maxDailyDrawdownPct),
+        maxConsecutiveLosses: user.maxConsecutiveLosses,
+        riskPerTradePct: Number(user.riskPerTradePct)
+      }
     })
 
   } catch (error) {
@@ -42,36 +47,54 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { totalCapital, maxDailyDrawdownPct, maxConsecutiveLosses, riskPerTradePct } = body
+    const {
+      totalCapital,
+      maxDailyDrawdownPct,
+      maxConsecutiveLosses,
+      riskPerTradePct
+    } = body
 
     // Validate required fields
     if (!totalCapital || !maxDailyDrawdownPct || !maxConsecutiveLosses || !riskPerTradePct) {
       return NextResponse.json({
-        error: 'All risk profile fields are required'
+        error: 'Missing required fields'
       }, { status: 400 })
     }
 
+    // Validate ranges
+    if (totalCapital <= 0) {
+      return NextResponse.json({ error: 'Total capital must be positive' }, { status: 400 })
+    }
+    if (maxDailyDrawdownPct <= 0 || maxDailyDrawdownPct > 50) {
+      return NextResponse.json({ error: 'Daily drawdown must be between 0.1% and 50%' }, { status: 400 })
+    }
+    if (maxConsecutiveLosses <= 0 || maxConsecutiveLosses > 20) {
+      return NextResponse.json({ error: 'Max consecutive losses must be between 1 and 20' }, { status: 400 })
+    }
+    if (riskPerTradePct <= 0 || riskPerTradePct > 10) {
+      return NextResponse.json({ error: 'Risk per trade must be between 0.1% and 10%' }, { status: 400 })
+    }
+
+    // Update user's risk profile
     const updatedUser = await prisma.user.update({
       where: { clerkUserId: clerkUser.id },
       data: {
         totalCapital: parseFloat(totalCapital),
         maxDailyDrawdownPct: parseFloat(maxDailyDrawdownPct),
         maxConsecutiveLosses: parseInt(maxConsecutiveLosses),
-        riskPerTradePct: parseFloat(riskPerTradePct),
-        updatedAt: new Date()
-      },
-      select: {
-        totalCapital: true,
-        maxDailyDrawdownPct: true,
-        maxConsecutiveLosses: true,
-        riskPerTradePct: true
+        riskPerTradePct: parseFloat(riskPerTradePct)
       }
     })
 
     return NextResponse.json({
       success: true,
       message: 'Risk profile updated successfully',
-      data: updatedUser
+      data: {
+        totalCapital: Number(updatedUser.totalCapital),
+        maxDailyDrawdownPct: Number(updatedUser.maxDailyDrawdownPct),
+        maxConsecutiveLosses: updatedUser.maxConsecutiveLosses,
+        riskPerTradePct: Number(updatedUser.riskPerTradePct)
+      }
     })
 
   } catch (error) {

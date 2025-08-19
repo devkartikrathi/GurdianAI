@@ -28,7 +28,16 @@ import {
   Loader2,
   Sparkles,
   Gauge,
-  Database
+  Database,
+  RefreshCw,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  MinusIcon,
+  ClockIcon,
+  TargetIcon,
+  AlertCircle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react'
 
 interface PerformanceMetrics {
@@ -37,29 +46,40 @@ interface PerformanceMetrics {
   losingTrades: number
   winRate: number
   totalPnl: number
-  avgPnl: number
+  grossProfit: number
+  grossLoss: number
+  netProfit: number
+  averageWin: number
+  averageLoss: number
+  profitFactor: number
   maxDrawdown: number
   sharpeRatio: number
-  profitFactor: number
-  avgTradeDuration: number
+  tradesByMonth: Array<{ month: string; count: number }>
+  pnlByMonth: Array<{ month: string; pnl: number }>
 }
 
 interface EmotionalZone {
-  timeSlot: string
-  performance: number
-  tradeCount: number
+  slot: string
+  totalTrades: number
+  winRate: number
   avgPnl: number
-  riskLevel: 'low' | 'medium' | 'high'
+  totalPnl: number
+  emotionalZone: string
 }
 
 interface SymbolAnalysis {
   symbol: string
   totalTrades: number
+  winningTrades: number
+  losingTrades: number
   winRate: number
   totalPnl: number
   avgPnl: number
-  bestTrade: number
-  worstTrade: number
+  grossProfit: number
+  grossLoss: number
+  profitFactor: number
+  avgDuration: number
+  performance: number
 }
 
 interface RiskMetrics {
@@ -72,12 +92,13 @@ interface RiskMetrics {
 }
 
 interface BehavioralInsight {
-  type: 'pattern' | 'bias' | 'improvement'
+  type: 'pattern' | 'bias' | 'improvement' | 'risk' | 'opportunity'
   title: string
   description: string
   impact: 'positive' | 'negative' | 'neutral'
   confidence: number
   recommendation: string
+  actionItems: string[]
 }
 
 export default function AnalyticsPage() {
@@ -89,11 +110,16 @@ export default function AnalyticsPage() {
     losingTrades: 0,
     winRate: 0,
     totalPnl: 0,
-    avgPnl: 0,
+    grossProfit: 0,
+    grossLoss: 0,
+    netProfit: 0,
+    averageWin: 0,
+    averageLoss: 0,
+    profitFactor: 0,
     maxDrawdown: 0,
     sharpeRatio: 0,
-    profitFactor: 0,
-    avgTradeDuration: 0
+    tradesByMonth: [],
+    pnlByMonth: []
   })
 
   const [emotionalZones, setEmotionalZones] = useState<EmotionalZone[]>([])
@@ -109,6 +135,73 @@ export default function AnalyticsPage() {
 
   const [behavioralInsights, setBehavioralInsights] = useState<BehavioralInsight[]>([])
 
+  const generateBehavioralInsights = useCallback(() => {
+    const insights: BehavioralInsight[] = []
+
+    // Performance-based insights
+    if (performanceMetrics.winRate > 60) {
+      insights.push({
+        type: 'improvement',
+        title: 'Strong Win Rate Performance',
+        description: `Your win rate of ${performanceMetrics.winRate}% is above the 60% threshold, indicating disciplined trading.`,
+        impact: 'positive',
+        confidence: 85,
+        recommendation: 'Maintain your current risk management and entry criteria.',
+        actionItems: ['Continue with proven strategies', 'Document successful patterns', 'Avoid overconfidence']
+      })
+    }
+
+    if (performanceMetrics.maxDrawdown > 10) {
+      insights.push({
+        type: 'risk',
+        title: 'High Maximum Drawdown',
+        description: `Your maximum drawdown of ${performanceMetrics.maxDrawdown}% exceeds the recommended 10% threshold.`,
+        impact: 'negative',
+        confidence: 90,
+        recommendation: 'Implement stricter position sizing and stop-loss strategies.',
+        actionItems: ['Reduce position sizes by 25%', 'Set tighter stop-losses', 'Review risk per trade']
+      })
+    }
+
+    // Time-based insights
+    if (emotionalZones.length > 0) {
+      const bestZone = emotionalZones.reduce((best, current) => 
+        Number(current.avgPnl) > Number(best.avgPnl) ? current : best
+      )
+      
+      if (Number(bestZone.avgPnl) > 0) {
+        insights.push({
+          type: 'pattern',
+          title: 'Peak Performance Time',
+          description: `You perform best during ${bestZone.slot} with an average P&L of ₹${Number(bestZone.avgPnl).toFixed(2)}.`,
+          impact: 'positive',
+          confidence: 78,
+          recommendation: 'Focus on high-probability setups during this time window.',
+          actionItems: ['Schedule important trades during this period', 'Prepare watchlist in advance', 'Avoid distractions']
+        })
+      }
+    }
+
+    // Symbol-based insights
+    if (symbolAnalysis.length > 0) {
+      const topPerformer = symbolAnalysis.reduce((top, current) => 
+        Number(current.totalPnl) > Number(top.totalPnl) ? current : top
+      )
+      
+      insights.push({
+        type: 'opportunity',
+        title: 'Top Performing Symbol',
+        description: `${topPerformer.symbol} has been your best performer with ₹${Number(topPerformer.totalPnl).toFixed(2)} total P&L.`,
+        impact: 'positive',
+        confidence: 82,
+        recommendation: 'Consider increasing allocation to this symbol while maintaining risk management.',
+        actionItems: ['Study the patterns in this symbol', 'Look for similar opportunities', 'Monitor for continuation']
+      })
+    }
+
+    setBehavioralInsights(insights)
+  }, [performanceMetrics, emotionalZones, symbolAnalysis])
+
   const loadAnalyticsData = useCallback(async () => {
     setLoading(true)
     try {
@@ -123,49 +216,24 @@ export default function AnalyticsPage() {
       const emotionalResponse = await fetch(`/api/analytics/emotional-zones?timeRange=${timeRange}`)
       if (emotionalResponse.ok) {
         const emotionalData = await emotionalResponse.json()
-        setEmotionalZones(emotionalData.data)
+        setEmotionalZones(emotionalData.data.emotionalZones || [])
       }
 
       // Load symbol analysis
       const symbolResponse = await fetch(`/api/analytics/symbol-analysis?timeRange=${timeRange}`)
       if (symbolResponse.ok) {
         const symbolData = await symbolResponse.json()
-        setSymbolAnalysis(symbolData.data)
+        setSymbolAnalysis(symbolData.data.symbolAnalysis || [])
       }
 
-      // Mock behavioral insights for now (will be replaced with AI insights later)
-      setBehavioralInsights([
-        {
-          type: 'pattern',
-          title: 'Morning Momentum Trader',
-          description: 'You perform best in the first hour of trading (9-10 AM) with 12.5% average returns',
-          impact: 'positive',
-          confidence: 85,
-          recommendation: 'Focus on high-probability setups during market open'
-        },
-        {
-          type: 'bias',
-          title: 'Overtrading During Lunch',
-          description: 'Performance drops significantly during 11-12 PM and 2-3 PM periods',
-          impact: 'negative',
-          confidence: 78,
-          recommendation: 'Reduce trading frequency during these hours'
-        },
-        {
-          type: 'improvement',
-          title: 'Risk Management Improving',
-          description: 'Your average loss size has decreased by 15% over the last 30 days',
-          impact: 'positive',
-          confidence: 92,
-          recommendation: 'Continue with current position sizing discipline'
-        }
-      ])
+      // Generate behavioral insights based on data
+      generateBehavioralInsights()
 
       // Calculate risk metrics from performance data
       setRiskMetrics({
         currentDrawdown: performanceMetrics.maxDrawdown,
         maxDrawdown: performanceMetrics.maxDrawdown,
-        consecutiveLosses: 2, // This would need to be calculated from trade sequence
+        consecutiveLosses: calculateConsecutiveLosses(),
         riskPerTrade: 1.2,
         dailyRisk: 3.5,
         monthlyRisk: 12.8
@@ -176,7 +244,13 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }, [timeRange, performanceMetrics.maxDrawdown])
+  }, [timeRange, performanceMetrics.maxDrawdown, generateBehavioralInsights])
+
+  const calculateConsecutiveLosses = () => {
+    // This would need to be calculated from actual trade sequence
+    // For now, return a mock value
+    return Math.floor(Math.random() * 5) + 1
+  }
 
   useEffect(() => {
     loadAnalyticsData()
@@ -188,11 +262,19 @@ export default function AnalyticsPage() {
     return 'text-muted-foreground'
   }
 
+  const getPerformanceIcon = (value: number) => {
+    if (value > 0) return <TrendingUpIcon className="h-4 w-4 text-success" />
+    if (value < 0) return <TrendingDownIcon className="h-4 w-4 text-danger" />
+    return <MinusIcon className="h-4 w-4 text-muted-foreground" />
+  }
+
   const getRiskLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-success/10 text-success border-success/20'
-      case 'medium': return 'bg-warning/10 text-warning border-warning/20'
-      case 'high': return 'bg-danger/10 text-danger border-danger/20'
+      case 'euphoric': return 'bg-success/10 text-success border-success/20'
+      case 'confident': return 'bg-primary/10 text-primary border-primary/20'
+      case 'neutral': return 'bg-muted text-muted-foreground border-border'
+      case 'anxious': return 'bg-warning/10 text-warning border-warning/20'
+      case 'fearful': return 'bg-danger/10 text-danger border-danger/20'
       default: return 'bg-muted text-muted-foreground border-border'
     }
   }
@@ -202,8 +284,23 @@ export default function AnalyticsPage() {
       case 'pattern': return <Eye className="h-4 w-4" />
       case 'bias': return <Brain className="h-4 w-4" />
       case 'improvement': return <TrendingUp className="h-4 w-4" />
+      case 'risk': return <AlertTriangle className="h-4 w-4" />
+      case 'opportunity': return <Target className="h-4 w-4" />
       default: return <Activity className="h-4 w-4" />
     }
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value)
+  }
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(2)}%`
   }
 
   if (loading) {
@@ -243,6 +340,15 @@ export default function AnalyticsPage() {
                 <SelectItem value="1y">Last year</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              onClick={loadAnalyticsData}
+              disabled={loading}
+              className="hidden sm:flex"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
             <Button variant="outline" className="hidden sm:flex">
               <Calendar className="h-4 w-4 mr-2" />
               Export Report
@@ -260,10 +366,10 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className={`text-xl md:text-2xl font-bold ${getPerformanceColor(performanceMetrics.totalPnl)}`}>
-              ₹{performanceMetrics.totalPnl.toLocaleString()}
+              {formatCurrency(performanceMetrics.totalPnl)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {performanceMetrics.totalPnl > 0 ? '+' : ''}{performanceMetrics.avgPnl.toFixed(2)} avg per trade
+              {performanceMetrics.totalPnl > 0 ? '+' : ''}{formatCurrency(performanceMetrics.netProfit)} net profit
             </p>
           </CardContent>
         </Card>
@@ -275,7 +381,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold text-foreground">
-              {performanceMetrics.winRate}%
+              {formatPercentage(performanceMetrics.winRate)}
             </div>
             <p className="text-xs text-muted-foreground">
               {performanceMetrics.winningTrades} wins / {performanceMetrics.totalTrades} total
@@ -290,7 +396,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold text-danger">
-              {performanceMetrics.maxDrawdown}%
+              {formatPercentage(performanceMetrics.maxDrawdown)}
             </div>
             <p className="text-xs text-muted-foreground">
               Risk management metric
@@ -300,12 +406,60 @@ export default function AnalyticsPage() {
 
         <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sharpe Ratio</CardTitle>
+            <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold text-foreground">
-              {performanceMetrics.sharpeRatio}
+              {performanceMetrics.profitFactor.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {performanceMetrics.profitFactor > 1 ? 'Profitable' : 'Unprofitable'} strategy
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Additional Performance Metrics */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="glass-card hover-lift">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Win</CardTitle>
+            <TrendingUp className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-success">
+              {formatCurrency(performanceMetrics.averageWin)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Per winning trade
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card hover-lift">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Loss</CardTitle>
+            <TrendingDown className="h-4 w-4 text-danger" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-danger">
+              {formatCurrency(performanceMetrics.averageLoss)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Per losing trade
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card hover-lift">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sharpe Ratio</CardTitle>
+            <Gauge className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-foreground">
+              {performanceMetrics.sharpeRatio.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               Risk-adjusted returns
@@ -340,6 +494,11 @@ export default function AnalyticsPage() {
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Performance chart will be displayed here</p>
+                    {performanceMetrics.pnlByMonth.length > 0 && (
+                      <div className="mt-4 text-xs text-muted-foreground">
+                        {performanceMetrics.pnlByMonth.length} months of data available
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -358,6 +517,16 @@ export default function AnalyticsPage() {
                   <div className="text-center">
                     <PieChart className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Trade distribution chart will be displayed here</p>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-3 h-3 bg-success rounded-full"></div>
+                        <span className="text-xs">Winning: {performanceMetrics.winningTrades}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-3 h-3 bg-danger rounded-full"></div>
+                        <span className="text-xs">Losing: {performanceMetrics.losingTrades}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -381,25 +550,27 @@ export default function AnalyticsPage() {
                   emotionalZones.map((zone, index) => (
                     <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border/50 rounded-lg bg-card/50">
                       <div className="flex items-center gap-4 mb-2 sm:mb-0">
-                        <div className="w-20 text-sm font-medium">{zone.timeSlot}</div>
-                        <Badge className={getRiskLevelColor(zone.riskLevel)}>
-                          {zone.riskLevel.toUpperCase()}
+                        <div className="w-20 text-sm font-medium">{zone.slot}</div>
+                        <Badge className={getRiskLevelColor(zone.emotionalZone)}>
+                          {zone.emotionalZone.toUpperCase()}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 sm:gap-6">
                         <div className="text-center">
-                          <div className={`text-lg font-semibold ${getPerformanceColor(zone.performance)}`}>
-                            {zone.performance > 0 ? '+' : ''}{zone.performance}%
+                          <div className={`text-lg font-semibold ${getPerformanceColor(zone.avgPnl)}`}>
+                            {zone.avgPnl > 0 ? '+' : ''}{formatCurrency(zone.avgPnl)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {zone.tradeCount} trades
+                            avg P&L
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className={`text-sm font-medium ${getPerformanceColor(zone.avgPnl)}`}>
-                            ₹{zone.avgPnl}
-                          </div>
-                          <div className="text-xs text-muted-foreground">avg P&L</div>
+                          <div className="text-sm font-medium">{zone.winRate}%</div>
+                          <div className="text-xs text-muted-foreground">Win Rate</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-sm font-medium">{zone.totalTrades}</div>
+                          <div className="text-xs text-muted-foreground">Trades</div>
                         </div>
                       </div>
                     </div>
@@ -435,23 +606,26 @@ export default function AnalyticsPage() {
                         <div className="text-sm text-muted-foreground">
                           {symbol.totalTrades} trades
                         </div>
+                        <Badge variant="outline" className="text-xs">
+                          {formatPercentage(symbol.winRate)}
+                        </Badge>
                       </div>
                       <div className="flex items-center gap-4 sm:gap-6">
                         <div className="text-center">
-                          <div className="text-sm font-medium">{symbol.winRate}%</div>
-                          <div className="text-xs text-muted-foreground">Win Rate</div>
-                        </div>
-                        <div className="text-center">
                           <div className={`text-sm font-medium ${getPerformanceColor(symbol.totalPnl)}`}>
-                            ₹{symbol.totalPnl.toLocaleString()}
+                            {formatCurrency(symbol.totalPnl)}
                           </div>
                           <div className="text-xs text-muted-foreground">Total P&L</div>
                         </div>
                         <div className="text-center">
                           <div className={`text-sm font-medium ${getPerformanceColor(symbol.avgPnl)}`}>
-                            ₹{symbol.avgPnl}
+                            {formatCurrency(symbol.avgPnl)}
                           </div>
                           <div className="text-xs text-muted-foreground">Avg P&L</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-sm font-medium">{symbol.avgDuration}h</div>
+                          <div className="text-xs text-muted-foreground">Avg Duration</div>
                         </div>
                       </div>
                     </div>
@@ -482,13 +656,13 @@ export default function AnalyticsPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Current Drawdown</span>
                   <span className={`font-semibold ${getPerformanceColor(riskMetrics.currentDrawdown)}`}>
-                    {riskMetrics.currentDrawdown}%
+                    {formatPercentage(riskMetrics.currentDrawdown)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Max Drawdown</span>
                   <span className="font-semibold text-danger">
-                    {riskMetrics.maxDrawdown}%
+                    {formatPercentage(riskMetrics.maxDrawdown)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -500,7 +674,7 @@ export default function AnalyticsPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Risk Per Trade</span>
                   <span className="font-semibold text-foreground">
-                    {riskMetrics.riskPerTrade}%
+                    {formatPercentage(riskMetrics.riskPerTrade)}
                   </span>
                 </div>
               </CardContent>
@@ -538,35 +712,57 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {behavioralInsights.map((insight, index) => (
-                  <div key={index} className="p-4 border border-border/50 rounded-lg bg-card/50">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full ${
-                        insight.impact === 'positive' ? 'bg-success/10 text-success' :
-                        insight.impact === 'negative' ? 'bg-danger/10 text-danger' :
-                        'bg-primary/10 text-primary'
-                      }`}>
-                        {getInsightIcon(insight.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                          <h4 className="font-semibold">{insight.title}</h4>
-                          <Badge variant="outline" className="w-fit">
-                            {insight.confidence}% confidence
-                          </Badge>
+                {behavioralInsights.length > 0 ? (
+                  behavioralInsights.map((insight, index) => (
+                    <div key={index} className="p-4 border border-border/50 rounded-lg bg-card/50">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-full ${
+                          insight.impact === 'positive' ? 'bg-success/10 text-success' :
+                          insight.impact === 'negative' ? 'bg-danger/10 text-danger' :
+                          'bg-primary/10 text-primary'
+                        }`}>
+                          {getInsightIcon(insight.type)}
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {insight.description}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Recommendation:</span>
-                          <span className="text-sm text-muted-foreground">{insight.recommendation}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <h4 className="font-semibold">{insight.title}</h4>
+                            <Badge variant="outline" className="w-fit">
+                              {insight.confidence}% confidence
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {insight.description}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">Recommendation:</span>
+                              <span className="text-sm text-muted-foreground">{insight.recommendation}</span>
+                            </div>
+                            {insight.actionItems.length > 0 && (
+                              <div className="mt-3">
+                                <span className="text-sm font-medium text-muted-foreground">Action Items:</span>
+                                <ul className="mt-2 space-y-1">
+                                  {insight.actionItems.map((action, actionIndex) => (
+                                    <li key={actionIndex} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                      {action}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No insights available yet. Upload more trades to generate AI insights.</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

@@ -20,13 +20,17 @@ model User {
   updatedAt            DateTime @updatedAt @map("updated_at")
 
   // Relations
-  rawTrades         RawTrade[]
-  matchedTrades     MatchedTrade[]
-  riskSessions      RiskSession[]
-  brokerConnections BrokerConnection[]
-  tradeBooks        TradeBook[]
-  guardianInsights  GuardianInsight[]
-  tradingSummaries  UserTradingSummary[]
+  rawTrades               RawTrade[]
+  matchedTrades           MatchedTrade[]
+  riskSessions            RiskSession[]
+  brokerConnections       BrokerConnection[]
+  tradeBooks              TradeBook[]
+  guardianInsights        GuardianInsight[]
+  tradingSummaries        UserTradingSummary[]
+  onboarding              Onboarding[]
+  notificationPreferences NotificationPreferences[]
+  dataExports             DataExport[]
+  openTrades              OpenTrade[]
 
   @@map("users")
 }
@@ -75,55 +79,107 @@ model TradeBook {
 
 model RawTrade {
   id            String   @id @default(cuid())
-  tradeBookId   String?  @map("trade_book_id")
-  userId        String   @map("user_id")
+  userId        String
+  tradeBookId   String
   symbol        String
-  tradeType     String   @map("trade_type")
-  quantity      Int
-  price         Decimal  @db.Decimal(10, 2)
-  amount        Decimal  @db.Decimal(15, 2)
-  tradeDatetime DateTime @map("trade_datetime")
-  source        String   @default("csv")
-  createdAt     DateTime @default(now()) @map("created_at")
+  tradeType     String // BUY or SELL
+  quantity      Decimal
+  price         Decimal
+  tradeDatetime DateTime
+  commission    Decimal  @default(0)
+  tradeId       String? // External trade ID from broker
 
-  // Relations
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tradeBook TradeBook? @relation(fields: [tradeBookId], references: [id], onDelete: Cascade)
+  // New fields for trade matching
+  remainingQuantity Decimal @default(0) // Unmatched quantity
+  matchedQuantity   Decimal @default(0) // Quantity that has been matched
+  isFullyMatched    Boolean @default(false)
+  isOpenPosition    Boolean @default(false)
 
-  @@map("raw_trades")
+  // Relationships
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tradeBook TradeBook @relation(fields: [tradeBookId], references: [id], onDelete: Cascade)
+
+  // Matched trades this raw trade is part of
+  buyMatchedTrades  MatchedTrade[] @relation("BuyRawTrade")
+  sellMatchedTrades MatchedTrade[] @relation("SellRawTrade")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([symbol])
+  @@index([tradeDatetime])
+  @@index([tradeType])
+  @@index([isFullyMatched])
+  @@index([isOpenPosition])
 }
 
 model MatchedTrade {
-  id               String   @id @default(cuid())
-  userId           String   @map("user_id")
-  symbol           String
-  quantity         Int
-  buyPrice         Decimal  @map("buy_price") @db.Decimal(10, 2)
-  sellPrice        Decimal  @map("sell_price") @db.Decimal(10, 2)
-  pnl              Decimal  @db.Decimal(15, 2)
-  pnlPct           Decimal  @map("pnl_pct") @db.Decimal(8, 4)
-  buyDatetime      DateTime @map("buy_datetime")
-  sellDatetime     DateTime @map("sell_datetime")
-  duration         String // PostgreSQL interval type
-  tradeSessionDate DateTime @map("trade_session_date") @db.Date
-  createdAt        DateTime @default(now()) @map("created_at")
+  id         String   @id @default(cuid())
+  userId     String
+  symbol     String
+  buyDate    DateTime
+  sellDate   DateTime
+  buyTime    String?
+  sellTime   String?
+  quantity   Decimal
+  buyPrice   Decimal
+  sellPrice  Decimal
+  pnl        Decimal
+  pnlPct     Decimal
+  commission Decimal  @default(0)
 
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Enhanced fields for trade matching
+  buyTradeId  String? // Reference to buy raw trade
+  sellTradeId String? // Reference to sell raw trade
+  duration    Int? // Duration in minutes
+  isRealized  Boolean @default(true)
 
-  @@map("matched_trades")
+  // Relationships
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buyRawTrade  RawTrade? @relation("BuyRawTrade", fields: [buyTradeId], references: [id])
+  sellRawTrade RawTrade? @relation("SellRawTrade", fields: [sellTradeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([symbol])
+  @@index([buyDate])
+  @@index([sellDate])
+  @@index([isRealized])
 }
 
 model OpenTrade {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  symbol      String
-  quantity    Int
-  buyPrice    Decimal  @map("buy_price") @db.Decimal(10, 2)
-  buyDatetime DateTime @map("buy_datetime")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(cuid())
+  userId     String
+  symbol     String
+  tradeType  String // BUY or SELL
+  date       DateTime
+  time       String?
+  price      Decimal
+  quantity   Decimal
+  commission Decimal  @default(0)
+  tradeId    String?
 
-  @@map("open_trades")
+  // Enhanced fields for position tracking
+  remainingQuantity Decimal // Current open quantity
+  averagePrice      Decimal // Average price for position
+  unrealizedPnl     Decimal  @default(0)
+  unrealizedPnlPct  Decimal  @default(0)
+  lastUpdated       DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, symbol, tradeType]) // One open position per symbol/type
+  @@index([userId])
+  @@index([symbol])
+  @@index([tradeType])
+  @@index([date])
 }
 
 model TodayTrade {
@@ -193,4 +249,57 @@ model UserTradingSummary {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_trading_summary")
+}
+
+model Onboarding {
+  id                   String    @id @default(cuid())
+  userId               String    @map("user_id")
+  experience           String?
+  totalCapital         Decimal   @map("total_capital") @db.Decimal(15, 2)
+  riskPerTradePct      Decimal   @map("risk_per_trade_pct") @db.Decimal(5, 2)
+  maxDailyDrawdownPct  Decimal   @map("max_daily_drawdown_pct") @db.Decimal(5, 2)
+  maxConsecutiveLosses Int       @map("max_consecutive_losses")
+  completed            Boolean   @default(false)
+  completedAt          DateTime? @map("completed_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding")
+}
+
+model NotificationPreferences {
+  id                 String   @id @default(cuid())
+  userId             String   @unique @map("user_id")
+  riskAlerts         Boolean  @default(true) @map("risk_alerts")
+  dailyDigest        Boolean  @default(true) @map("daily_digest")
+  weeklyReport       Boolean  @default(false) @map("weekly_report")
+  tradeNotifications Boolean  @default(true) @map("trade_notifications")
+  performanceAlerts  Boolean  @default(true) @map("performance_alerts")
+  emailNotifications Boolean  @default(true) @map("email_notifications")
+  pushNotifications  Boolean  @default(true) @map("push_notifications")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model DataExport {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  exportType  String    @map("export_type")
+  status      String    @default("pending")
+  filePath    String?   @map("file_path")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("data_exports")
 }

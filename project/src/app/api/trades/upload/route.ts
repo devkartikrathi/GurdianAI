@@ -263,10 +263,9 @@ async function processMatchedTrades(userId: string, trades: any[]) {
           sellPrice: sellTrade.price,
           pnl,
           pnlPct,
-          buyDatetime: buyTrade.tradeDatetime,
-          sellDatetime: sellTrade.tradeDatetime,
-          duration,
-          tradeSessionDate: buyTrade.tradeDatetime
+          buyDate: buyTrade.tradeDatetime,
+          sellDate: sellTrade.tradeDatetime,
+          duration: Math.floor(durationMs / (1000 * 60)) // duration in minutes, not string
         })
 
         // Update quantities

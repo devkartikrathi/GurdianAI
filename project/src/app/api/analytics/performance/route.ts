@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate max drawdown
     let maxDrawdown = 0
+    let maxDrawdownPct = 0
     let peak = 0
     let runningTotal = 0
 
@@ -79,6 +80,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Calculate max drawdown percentage based on the peak value
+    maxDrawdownPct = peak > 0 ? (maxDrawdown / peak) * 100 : 0
+
     // Calculate Sharpe ratio (simplified)
     const returns = trades.map(trade => Number(trade.pnl))
     const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length
@@ -87,13 +91,13 @@ export async function GET(request: NextRequest) {
 
     // Group trades by month
     const tradesByMonth = trades.reduce((acc, trade) => {
-      const month = trade.tradeSessionDate.toISOString().slice(0, 7) // YYYY-MM
+      const month = trade.buyDate.toISOString().slice(0, 7) // YYYY-MM
       acc[month] = (acc[month] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 
     const pnlByMonth = trades.reduce((acc, trade) => {
-      const month = trade.tradeSessionDate.toISOString().slice(0, 7) // YYYY-MM
+      const month = trade.buyDate.toISOString().slice(0, 7) // YYYY-MM
       acc[month] = (acc[month] || 0) + Number(trade.pnl)
       return acc
     }, {} as Record<string, number>)
@@ -112,7 +116,7 @@ export async function GET(request: NextRequest) {
         averageWin: Math.round(averageWin * 100) / 100,
         averageLoss: Math.round(averageLoss * 100) / 100,
         profitFactor: Math.round(profitFactor * 100) / 100,
-        maxDrawdown: Math.round(maxDrawdown * 100) / 100,
+        maxDrawdown: Math.round(maxDrawdownPct * 100) / 100,
         sharpeRatio: Math.round(sharpeRatio * 100) / 100,
         tradesByMonth: Object.entries(tradesByMonth).map(([month, count]) => ({ month, count })),
         pnlByMonth: Object.entries(pnlByMonth).map(([month, pnl]) => ({ month, pnl: Math.round(pnl * 100) / 100 }))

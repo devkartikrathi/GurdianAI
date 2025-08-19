@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         // Analyze trades by time slot
         const timeSlotAnalysis = timeSlots.map(slot => {
             const slotTrades = trades.filter(trade => {
-                const tradeHour = new Date(trade.buyDatetime).getHours()
+                const tradeHour = new Date(trade.buyDate).getHours()
                 return tradeHour >= slot.start && tradeHour < slot.end
             })
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         const dayOfWeekAnalysis = daysOfWeek.map(day => {
             const dayTrades = trades.filter(trade => {
-                const tradeDay = new Date(trade.buyDatetime).getDay()
+                const tradeDay = new Date(trade.buyDate).getDay()
                 return tradeDay === daysOfWeek.indexOf(day)
             })
 
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
 
         // Analyze monthly patterns
         const monthlyAnalysis = trades.reduce((acc, trade) => {
-            const month = trade.tradeSessionDate.toISOString().slice(0, 7) // YYYY-MM
+            const month = trade.buyDate.toISOString().slice(0, 7) // YYYY-MM
             if (!acc[month]) {
                 acc[month] = {
                     month,

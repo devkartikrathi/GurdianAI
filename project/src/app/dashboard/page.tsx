@@ -1,7 +1,9 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+"use client"
+
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -14,23 +16,72 @@ import {
   Shield,
   Brain,
   Gauge,
-  Database
+  Database,
+  RefreshCw,
+  Loader2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus
 } from 'lucide-react'
+import Link from 'next/link'
 
-export default async function DashboardPage() {
-  const { userId } = await auth()
-
-  if (!userId) {
-    redirect('/sign-in')
+interface DashboardData {
+  today: {
+    pnl: number
+    totalTrades: number
+    winRate: number
+    sessionDuration: string
   }
+  risk: {
+    status: string
+    message: string
+    maxDrawdown: number
+  }
+  activity: Array<{
+    type: string
+    title: string
+    description: string
+    status: string
+    timestamp: string
+    icon: string
+  }>
+  summary: {
+    totalTrades: number
+    totalPnL: number
+  }
+}
 
-  // Mock data - in real app this would come from API
-  const riskStatus = 'green' // green, amber, red
-  const todayPnL = 45230
-  const totalTrades = 12
-  const winRate = 78
-  const maxDrawdown = 1.2
-  const sessionDuration = '4h 23m'
+export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/dashboard/overview')
+      if (response.ok) {
+        const result = await response.json()
+        setDashboardData(result.data)
+      } else {
+        setError('Failed to load dashboard data')
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+      setError('Failed to load dashboard data')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchDashboardData()
+    
+    // Refresh data every 5 minutes
+    const interval = setInterval(fetchDashboardData, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [fetchDashboardData])
 
   const getRiskStatusColor = (status: string) => {
     switch (status) {
@@ -50,36 +101,126 @@ export default async function DashboardPage() {
     }
   }
 
+  const getRiskBorderColor = (status: string) => {
+    switch (status) {
+      case 'green': return 'border-l-success'
+      case 'amber': return 'border-l-warning'
+      case 'red': return 'border-l-danger'
+      default: return 'border-l-muted'
+    }
+  }
+
+  const getActivityIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'CheckCircle': return <CheckCircle className="h-5 w-5 text-success" />
+      case 'AlertTriangle': return <AlertTriangle className="h-5 w-5 text-warning" />
+      case 'Database': return <Database className="h-5 w-5 text-primary" />
+      default: return <Activity className="h-5 w-5 text-muted-foreground" />
+    }
+  }
+
+  const getActivityStatusColor = (status: string) => {
+    switch (status) {
+      case 'success': return 'bg-success/10 border-success/20'
+      case 'warning': return 'bg-warning/10 border-warning/20'
+      case 'primary': return 'bg-primary/10 border-primary/20'
+      default: return 'bg-muted/10 border-muted/20'
+    }
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value)
+  }
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const time = new Date(timestamp)
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
+    
+    if (diffInMinutes < 1) return 'Just now'
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+    return `${Math.floor(diffInMinutes / 1440)}d ago`
+  }
+
+  const getPerformanceIcon = (value: number) => {
+    if (value > 0) return <ArrowUpRight className="h-4 w-4 text-success" />
+    if (value < 0) return <ArrowDownRight className="h-4 w-4 text-danger" />
+    return <Minus className="h-4 w-4 text-muted-foreground" />
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-muted-foreground">Loading dashboard...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <div className="text-center py-12">
+          <AlertTriangle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">Failed to load dashboard</h3>
+          <p className="text-muted-foreground mb-4">{error || 'No data available'}</p>
+          <Button onClick={fetchDashboardData} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-primary/10 rounded-xl">
-            <Shield className="h-6 w-6 text-primary" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-muted-foreground">Your real-time trading overview and risk status</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Your trading overview and risk status</p>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={fetchDashboardData}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
       </div>
 
       {/* Risk Status Card */}
-      <Card className="glass-card border-l-4 border-l-success hover-lift">
+      <Card className={`glass-card border-l-4 ${getRiskBorderColor(dashboardData.risk.status)} hover-lift`}>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                {getRiskStatusIcon(riskStatus)}
+                {getRiskStatusIcon(dashboardData.risk.status)}
                 <span>Risk Status</span>
               </CardTitle>
               <CardDescription>
-                Current session risk level and recommendations
+                {dashboardData.risk.message}
               </CardDescription>
             </div>
-            <div className={`text-xl md:text-2xl font-bold ${getRiskStatusColor(riskStatus)}`}>
-              {riskStatus.toUpperCase()}
+            <div className={`text-xl md:text-2xl font-bold ${getRiskStatusColor(dashboardData.risk.status)}`}>
+              {dashboardData.risk.status.toUpperCase()}
             </div>
           </div>
         </CardHeader>
@@ -88,14 +229,14 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Session Duration</span>
-                <span className="font-medium text-foreground">{sessionDuration}</span>
+                <span className="font-medium text-foreground">{dashboardData.today.sessionDuration}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Max Drawdown</span>
-                <span className="font-medium text-foreground">{maxDrawdown}%</span>
+                <span className="font-medium text-foreground">{dashboardData.risk.maxDrawdown.toFixed(2)}%</span>
               </div>
             </div>
-            <Progress value={maxDrawdown * 10} className="h-2" />
+            <Progress value={Math.min(dashboardData.risk.maxDrawdown * 10, 100)} className="h-2" />
           </div>
         </CardContent>
       </Card>
@@ -108,24 +249,29 @@ export default async function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-success">
-              ₹{todayPnL.toLocaleString()}
+            <div className={`text-xl md:text-2xl font-bold ${dashboardData.today.pnl >= 0 ? 'text-success' : 'text-danger'}`}>
+              {formatCurrency(dashboardData.today.pnl)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              +12.5% from yesterday
-            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {getPerformanceIcon(dashboardData.today.pnl)}
+              <span>
+                {dashboardData.today.pnl >= 0 ? 'Profitable' : 'Loss'} today
+              </span>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="glass-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Trades</CardTitle>
+            <CardTitle className="text-sm font-medium">Today's Trades</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">{totalTrades}</div>
+            <div className="text-xl md:text-2xl font-bold text-foreground">
+              {dashboardData.today.totalTrades}
+            </div>
             <p className="text-xs text-muted-foreground">
-              This session
+              {dashboardData.today.winRate.toFixed(1)}% win rate
             </p>
           </CardContent>
         </Card>
@@ -136,9 +282,11 @@ export default async function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">{winRate}%</div>
+            <div className="text-xl md:text-2xl font-bold text-foreground">
+              {dashboardData.today.winRate.toFixed(1)}%
+            </div>
             <p className="text-xs text-muted-foreground">
-              +5% from last week
+              {dashboardData.today.totalTrades > 0 ? `${dashboardData.today.totalTrades} trades` : 'No trades yet'}
             </p>
           </CardContent>
         </Card>
@@ -149,7 +297,9 @@ export default async function DashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">{sessionDuration}</div>
+            <div className="text-xl md:text-2xl font-bold text-foreground">
+              {dashboardData.today.sessionDuration}
+            </div>
             <p className="text-xs text-muted-foreground">
               Active trading session
             </p>
@@ -172,44 +322,30 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 bg-success/10 rounded-lg border border-success/20">
-                <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-success mb-1">
-                    Position size recommendation applied
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Guardian AI suggested 50% position size for RELIANCE trade
-                  </p>
+              {dashboardData.activity.length > 0 ? (
+                dashboardData.activity.map((activity, index) => (
+                  <div key={index} className={`flex items-start gap-4 p-4 rounded-lg border ${getActivityStatusColor(activity.status)}`}>
+                    {getActivityIcon(activity.icon)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground mb-1">
+                        {activity.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.description}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatTimeAgo(activity.timestamp)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No recent activity</p>
+                  <p className="text-xs text-muted-foreground">Upload trades to see activity here</p>
                 </div>
-                <span className="text-xs text-success whitespace-nowrap">2 min ago</span>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <Activity className="h-5 w-5 text-primary mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary mb-1">
-                    Trade uploaded successfully
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    15 trades processed from CSV file
-                  </p>
-                </div>
-                <span className="text-xs text-primary whitespace-nowrap">15 min ago</span>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-warning/10 rounded-lg border border-warning/20">
-                <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-warning mb-1">
-                    Risk warning triggered
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Approaching daily loss limit - consider taking a break
-                  </p>
-                </div>
-                <span className="text-xs text-warning whitespace-nowrap">1 hour ago</span>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -265,61 +401,69 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="glass-card hover-lift cursor-pointer">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Database className="h-5 w-5 text-primary" />
+        <Link href="/dashboard/upload">
+          <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Database className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Upload Trades</p>
+                  <p className="text-xs text-muted-foreground">Import CSV data</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">Upload Trades</p>
-                <p className="text-xs text-muted-foreground">Import CSV data</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="glass-card hover-lift cursor-pointer">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <Brain className="h-5 w-5 text-accent" />
+        <Link href="/dashboard/analytics">
+          <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-accent/10 rounded-lg">
+                  <Brain className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">AI Insights</p>
+                  <p className="text-xs text-muted-foreground">View analysis</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">AI Insights</p>
-                <p className="text-xs text-muted-foreground">View analysis</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="glass-card hover-lift cursor-pointer">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-success/10 rounded-lg">
-                <Gauge className="h-5 w-5 text-success" />
+        <Link href="/dashboard/settings">
+          <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-success/10 rounded-lg">
+                  <Gauge className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Risk Settings</p>
+                  <p className="text-xs text-muted-foreground">Configure alerts</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">Risk Settings</p>
-                <p className="text-xs text-muted-foreground">Configure alerts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="glass-card hover-lift cursor-pointer">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-warning/10 rounded-lg">
-                <Activity className="h-5 w-5 text-warning" />
+        <Link href="/dashboard/analytics">
+          <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-warning/10 rounded-lg">
+                  <Activity className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Performance</p>
+                  <p className="text-xs text-muted-foreground">View analytics</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">Performance</p>
-                <p className="text-xs text-muted-foreground">View analytics</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   )
