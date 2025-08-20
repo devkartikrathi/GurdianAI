@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { createZerodhaService } from '@/lib/broker-integration/zerodha-service'
 
 export async function GET(request: NextRequest) {
     try {
@@ -76,42 +77,63 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        let brokerConnection
+        // Create or update broker connection
+        let brokerConnection;
+
         if (existingConnection) {
             // Update existing connection
             brokerConnection = await prisma.brokerConnection.update({
                 where: { id: existingConnection.id },
                 data: {
-                    apiKey,
-                    apiSecret,
-                    accessToken: accessToken || null,
-                    lastSyncAt: new Date()
+                    apiKey: body.apiKey,
+                    apiSecret: body.apiSecret,
+                    connectionStatus: body.isActive ? 'active' : 'inactive',
+                    updatedAt: new Date()
                 }
-            })
+            });
         } else {
-            // Create new connection
+            // Create new connection - always start as pending for OAuth
             brokerConnection = await prisma.brokerConnection.create({
                 data: {
                     userId: user.id,
-                    brokerName: brokerName.toLowerCase(),
-                    apiKey,
-                    apiSecret,
-                    accessToken: accessToken || null,
-                    lastSyncAt: new Date()
+                    brokerName: body.brokerName,
+                    apiKey: body.apiKey,
+                    apiSecret: body.apiSecret,
+                    connectionStatus: 'pending',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
                 }
-            })
+            });
         }
 
-        return NextResponse.json({
-            success: true,
-            message: 'Broker connection updated successfully',
-            data: {
-                id: brokerConnection.id,
-                brokerName: brokerConnection.brokerName,
-                connectionStatus: brokerConnection.connectionStatus,
-                lastSyncAt: brokerConnection.lastSyncAt
+        // For Zerodha, generate login URL for OAuth with our callback route
+        let responseData: any = {
+            message: 'Broker connection saved successfully',
+            data: brokerConnection
+        }
+
+        if (body.brokerName === 'zerodha') {
+            try {
+                const zerodhaService = createZerodhaService({
+                    apiKey: body.apiKey,
+                    apiSecret: body.apiSecret
+                })
+
+                // Generate the login URL with our callback route
+                const baseLoginUrl = zerodhaService.generateLoginUrl()
+                const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback/zerodha`
+                const loginUrl = `${baseLoginUrl}&redirect_uri=${encodeURIComponent(callbackUrl)}`
+
+                responseData.data.loginUrl = loginUrl
+                responseData.data.connectionId = brokerConnection.id
+                responseData.data.callbackUrl = callbackUrl
+            } catch (error) {
+                console.error('Error generating Zerodha login URL:', error)
+                // Continue without login URL - user can still save connection
             }
-        })
+        }
+
+        return NextResponse.json(responseData)
 
     } catch (error) {
         console.error('Broker connection update error:', error)

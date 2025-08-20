@@ -31,6 +31,7 @@ model User {
   notificationPreferences NotificationPreferences[]
   dataExports             DataExport[]
   openTrades              OpenTrade[]
+  dailyTrades             DailyTrades[]
 
   @@map("users")
 }
@@ -50,14 +51,49 @@ model BrokerConnection {
   expiresAt          DateTime? @map("expires_at")
   connectionStatus   String    @default("active") @map("connection_status")
   lastSyncAt         DateTime? @map("last_sync_at")
+  
+  // OAuth callback parameters
+  oauthAction        String?   @map("oauth_action")
+  oauthStatus        String?   @map("oauth_status")
+  oauthType          String?   @map("oauth_type")
+  oauthCompletedAt   DateTime? @map("oauth_completed_at")
+  
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTrades DailyTrades[]
 
   @@unique([userId, brokerName])
   @@map("broker_connections")
+}
+
+model DailyTrades {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  brokerConnectionId String  @map("broker_connection_id")
+  tradeDate         DateTime @map("trade_date") // Date of trades (without time)
+  totalTrades       Int      @default(0) @map("total_trades")
+  totalBuyTrades    Int      @default(0) @map("total_buy_trades")
+  totalSellTrades   Int      @default(0) @map("total_sell_trades")
+  totalBuyQuantity  Decimal  @default(0) @map("total_buy_quantity") @db.Decimal(15, 2)
+  totalSellQuantity Decimal  @default(0) @map("total_sell_quantity") @db.Decimal(15, 2)
+  totalBuyValue     Decimal  @default(0) @map("total_buy_value") @db.Decimal(15, 2)
+  totalSellValue    Decimal  @default(0) @map("total_sell_value") @db.Decimal(15, 2)
+  netQuantity       Decimal  @default(0) @map("net_quantity") @db.Decimal(15, 2)
+  netValue          Decimal  @default(0) @map("net_value") @db.Decimal(15, 2)
+  lastSyncAt        DateTime @default(now()) @map("last_sync_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brokerConnection BrokerConnection @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, brokerConnectionId, tradeDate])
+  @@index([userId, tradeDate])
+  @@map("daily_trades")
 }
 
 model TradeBook {

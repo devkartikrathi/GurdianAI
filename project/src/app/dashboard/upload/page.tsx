@@ -321,36 +321,36 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         {/* Main Content */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-4 sm:space-y-6">
           {/* File Upload Section */}
           <Card className="glass-card hover-lift">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Upload className="h-5 w-5" />
                 Upload Trade Data
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Upload your CSV trade files for analysis and matching
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 md:p-8 text-center cursor-pointer transition-colors ${
                   isDragActive
                     ? 'border-primary bg-primary/5'
                     : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5'
                 }`}
               >
                 <input {...getInputProps()} />
-                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium mb-2">
+                <Upload className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+                <p className="text-base sm:text-lg font-medium mb-2">
                   {isDragActive ? 'Drop your file here' : 'Drag & drop your CSV file here'}
                 </p>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-3 sm:mb-4">
                   or click to browse files
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -369,33 +369,33 @@ export default function UploadPage() {
 
           {/* Upload Results */}
           {showUploadResult && uploadResult && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="mb-4 sm:mb-6">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <CheckCircle className="h-5 w-5 text-success" />
                   Upload Results
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm">
                   Trade matching analysis and statistics
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
-                    <div className="text-2xl font-bold text-primary">{uploadResult.totalRows}</div>
-                    <div className="text-sm text-muted-foreground">Total Rows</div>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className="text-center p-3 sm:p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{uploadResult.totalRows}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Total Rows</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-success/5 border border-success/20">
-                    <div className="text-2xl font-bold text-success">{uploadResult.validTrades}</div>
-                    <div className="text-sm text-muted-foreground">Valid Trades</div>
+                  <div className="text-center p-3 sm:p-4 rounded-lg bg-success/5 border border-success/20">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-success">{uploadResult.validTrades}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Valid Trades</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-accent/5 border border-accent/20">
-                    <div className="text-2xl font-bold text-accent">{uploadResult.matchedTrades}</div>
-                    <div className="text-sm text-muted-foreground">Matched Trades</div>
+                  <div className="text-center p-3 sm:p-4 rounded-lg bg-accent/5 border border-accent/20">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-accent">{uploadResult.matchedTrades}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Matched Trades</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-warning/5 border border-warning/20">
-                    <div className="text-2xl font-bold text-warning">{uploadResult.openPositions}</div>
-                    <div className="text-sm text-muted-foreground">Open Positions</div>
+                  <div className="text-center p-3 sm:p-4 rounded-lg bg-warning/5 border border-warning/20">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-warning">{uploadResult.openPositions}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Open Positions</div>
                   </div>
                 </div>
                 
@@ -710,11 +710,12 @@ export default function UploadPage() {
                           <div className="text-xs text-muted-foreground">
                             {formatDate(tradeBook.uploadTimestamp)}
                           </div>
-                          <div className={`text-xs px-2 py-1 rounded-full ${
-                            tradeBook.parsed 
-                              ? 'bg-success/10 text-success' 
-                              : 'bg-warning/10 text-warning'
-                          }`}>
+                          <div className={`
+                            text-xs px-2 py-1 rounded-full ${
+                              tradeBook.parsed 
+                                ? 'bg-success/10 text-success' 
+                                : 'bg-warning/10 text-warning'
+                            }`}>
                             {tradeBook.parsed ? 'Parsed' : 'Processing'}
                           </div>
                         </div>
@@ -787,17 +788,17 @@ export default function UploadPage() {
         </div>
 
         {/* Guidelines Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card className="glass-card hover-lift">
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-accent" />
-                <CardTitle>Upload Guidelines</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Upload Guidelines</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
               <div>
-                <h4 className="font-medium text-foreground mb-2">Required Columns</h4>
+                <h4 className="font-medium text-foreground mb-2 text-sm sm:text-base">Required Columns</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
@@ -825,13 +826,13 @@ export default function UploadPage() {
           </Card>
 
           <Card className="glass-card hover-lift">
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-success" />
-                <CardTitle>Supported Formats</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Supported Formats</CardTitle>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-success rounded-full"></div>

@@ -182,51 +182,55 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <Shield className="h-6 w-6 text-primary" />
+            <div className="p-2 sm:p-3 bg-primary/10 rounded-xl">
+              <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-muted-foreground">Your real-time trading overview and risk status</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Your real-time trading overview and risk status</p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={fetchDashboardData}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={fetchDashboardData}
+              disabled={loading}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Risk Status Card */}
       <Card className={`glass-card border-l-4 ${getRiskBorderColor(dashboardData.risk.status)} hover-lift`}>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {getRiskStatusIcon(dashboardData.risk.status)}
                 <span>Risk Status</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 {dashboardData.risk.message}
               </CardDescription>
             </div>
-            <div className={`text-xl md:text-2xl font-bold ${getRiskStatusColor(dashboardData.risk.status)}`}>
+            <div className={`text-lg sm:text-xl md:text-2xl font-bold ${getRiskStatusColor(dashboardData.risk.status)}`}>
               {dashboardData.risk.status.toUpperCase()}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Session Duration</span>
                 <span className="font-medium text-foreground">{dashboardData.today.sessionDuration}</span>
@@ -242,65 +246,68 @@ export default function DashboardPage() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's P&L</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Today's P&L</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-xl md:text-2xl font-bold ${dashboardData.today.pnl >= 0 ? 'text-success' : 'text-danger'}`}>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className={`text-lg sm:text-xl md:text-2xl font-bold ${dashboardData.today.pnl >= 0 ? 'text-success' : 'text-danger'}`}>
               {formatCurrency(dashboardData.today.pnl)}
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
               {getPerformanceIcon(dashboardData.today.pnl)}
-              <span>
+              <span className="hidden sm:inline">
                 {dashboardData.today.pnl >= 0 ? 'Profitable' : 'Loss'} today
+              </span>
+              <span className="sm:hidden">
+                {dashboardData.today.pnl >= 0 ? '+' : '-'}
               </span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Trades</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Today's Trades</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {dashboardData.today.totalTrades}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {dashboardData.today.winRate.toFixed(1)}% win rate
             </p>
           </CardContent>
         </Card>
 
         <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Win Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {dashboardData.today.winRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {dashboardData.today.totalTrades > 0 ? `${dashboardData.today.totalTrades} trades` : 'No trades yet'}
             </p>
           </CardContent>
         </Card>
 
         <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Session Time</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Session Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl md:text-2xl font-bold text-foreground">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {dashboardData.today.sessionDuration}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Active trading session
             </p>
           </CardContent>
@@ -308,23 +315,23 @@ export default function DashboardPage() {
       </div>
 
       {/* AI Insights Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Activity */}
         <Card className="glass-card hover-lift lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Your latest trades and Guardian AI insights
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="space-y-3 sm:space-y-4">
               {dashboardData.activity.length > 0 ? (
                 dashboardData.activity.map((activity, index) => (
-                  <div key={index} className={`flex items-start gap-4 p-4 rounded-lg border ${getActivityStatusColor(activity.status)}`}>
+                  <div key={index} className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border ${getActivityStatusColor(activity.status)}`}>
                     {getActivityIcon(activity.icon)}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground mb-1">
@@ -340,8 +347,8 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <div className="text-center py-6 sm:py-8">
+                  <Activity className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No recent activity</p>
                   <p className="text-xs text-muted-foreground">Upload trades to see activity here</p>
                 </div>
@@ -352,17 +359,17 @@ export default function DashboardPage() {
 
         {/* AI Status */}
         <Card className="glass-card hover-lift">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <div className="flex items-center gap-2">
               <Gauge className="h-5 w-5 text-accent" />
-              <CardTitle>AI Status</CardTitle>
+              <CardTitle className="text-base sm:text-lg">AI Status</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Guardian AI monitoring status
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Behavioral Analysis</span>
                 <div className="flex items-center gap-2">
@@ -400,16 +407,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Link href="/dashboard/upload">
           <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Database className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Upload Trades</p>
+                  <p className="font-medium text-foreground text-sm sm:text-base">Upload Trades</p>
                   <p className="text-xs text-muted-foreground">Import CSV data</p>
                 </div>
               </div>
@@ -419,13 +426,13 @@ export default function DashboardPage() {
 
         <Link href="/dashboard/analytics">
           <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-accent/10 rounded-lg">
                   <Brain className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">AI Insights</p>
+                  <p className="font-medium text-foreground text-sm sm:text-base">AI Insights</p>
                   <p className="text-xs text-muted-foreground">View analysis</p>
                 </div>
               </div>
@@ -435,13 +442,13 @@ export default function DashboardPage() {
 
         <Link href="/dashboard/settings">
           <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-success/10 rounded-lg">
                   <Gauge className="h-5 w-5 text-success" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Risk Settings</p>
+                  <p className="font-medium text-foreground text-sm sm:text-base">Risk Settings</p>
                   <p className="text-xs text-muted-foreground">Configure alerts</p>
                 </div>
               </div>
@@ -451,13 +458,13 @@ export default function DashboardPage() {
 
         <Link href="/dashboard/analytics">
           <Card className="glass-card hover-lift cursor-pointer transition-all duration-200 hover:scale-105">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-warning/10 rounded-lg">
                   <Activity className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Performance</p>
+                  <p className="font-medium text-foreground text-sm sm:text-base">Performance</p>
                   <p className="text-xs text-muted-foreground">View analytics</p>
                 </div>
               </div>

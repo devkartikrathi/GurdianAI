@@ -49,43 +49,43 @@ const OnboardingStep1 = ({
   setData: React.Dispatch<React.SetStateAction<OnboardingData>>
   errors: ValidationErrors
 }) => (
-  <div className="space-y-6">
-    <div className="text-center mb-8">
-      <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <User className="h-8 w-8 text-primary" />
+  <div className="space-y-4 sm:space-y-6">
+    <div className="text-center mb-6 sm:mb-8">
+      <div className="bg-primary/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+        <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
       </div>
-      <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to Guardian AI</h2>
-      <p className="text-muted-foreground">Let's set up your profile and get you started</p>
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Welcome to Guardian AI</h2>
+      <p className="text-sm sm:text-base text-muted-foreground">Let's set up your profile and get you started</p>
     </div>
 
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div>
-        <Label htmlFor="name">Full Name *</Label>
+        <Label htmlFor="name" className="text-sm sm:text-base">Full Name *</Label>
         <Input 
           id="name" 
           placeholder="Enter your full name" 
           value={data.name}
           onChange={(e) => setData(prev => ({ ...prev, name: e.target.value }))}
-          className={errors.name ? 'border-red-500' : ''}
+          className={`mt-1 ${errors.name ? 'border-red-500' : ''}`}
         />
         {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
       </div>
       <div>
-        <Label htmlFor="email">Email *</Label>
+        <Label htmlFor="email" className="text-sm sm:text-base">Email *</Label>
         <Input 
           id="email" 
           type="email" 
           placeholder="Enter your email" 
           value={data.email}
           onChange={(e) => setData(prev => ({ ...prev, email: e.target.value }))}
-          className={errors.email ? 'border-red-500' : ''}
+          className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
         />
         {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
       </div>
       <div>
-        <Label htmlFor="experience">Trading Experience</Label>
+        <Label htmlFor="experience" className="text-sm sm:text-base">Trading Experience</Label>
         <select 
-          className={`w-full p-3 border rounded-md bg-background ${errors.experience ? 'border-red-500' : 'border-input'}`}
+          className={`w-full p-2 sm:p-3 border rounded-md bg-background mt-1 text-sm sm:text-base ${errors.experience ? 'border-red-500' : 'border-input'}`}
           value={data.experience}
           onChange={(e) => setData(prev => ({ ...prev, experience: e.target.value }))}
         >
@@ -525,13 +525,13 @@ export default function OnboardingPage() {
   const CurrentStepComponent = currentStepData?.component
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-2xl">
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-foreground">Setup Guardian AI</h1>
-            <span className="text-sm text-muted-foreground">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground text-center sm:text-left">Setup Guardian AI</h1>
+            <span className="text-sm text-muted-foreground text-center sm:text-right">
               Step {currentStep} of {steps.length}
             </span>
           </div>
@@ -540,7 +540,7 @@ export default function OnboardingPage() {
 
         {/* Step Content */}
         <Card>
-          <CardContent className="p-8">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             {CurrentStepComponent && (
               <CurrentStepComponent 
                 onNext={handleNext}
@@ -555,11 +555,11 @@ export default function OnboardingPage() {
         </Card>
 
         {/* Step Indicators */}
-        <div className="flex justify-center mt-8 space-x-2">
+        <div className="flex justify-center mt-6 sm:mt-8 space-x-2">
           {steps.map((step) => (
             <div
               key={step.id}
-              className={`w-3 h-3 rounded-full transition-colors ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${
                 step.id === currentStep
                   ? 'bg-primary'
                   : step.id < currentStep
@@ -573,9 +573,9 @@ export default function OnboardingPage() {
         {/* Loading overlay */}
         {isSubmitting && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <p className="text-foreground">Saving your profile...</p>
+            <div className="bg-background p-4 sm:p-6 rounded-lg flex items-center gap-3 mx-4">
+              <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-primary" />
+              <p className="text-sm sm:text-base text-foreground">Saving your profile...</p>
             </div>
           </div>
         )}

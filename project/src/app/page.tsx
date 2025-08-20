@@ -101,33 +101,33 @@ function Navigation() {
   return (
     <nav className="glass-card sticky top-0 z-50 backdrop-blur-2xl border-b border-primary/10 mb-0">
       <div className="container">
-        <div className="flex items-center justify-between py-4">
-          <Link href="/" className="flex items-center space-x-3 group">
+        <div className="flex items-center justify-between py-3 sm:py-4">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-30 group-hover:opacity-60 transition-opacity"></div>
-              <div className="relative bg-background/90 p-2 rounded-lg">
-                <Shield className="h-6 w-6 text-primary" />
+              <div className="relative bg-background/90 p-1.5 sm:p-2 rounded-lg">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-gradient-primary">Guardian AI</span>
-              <span className="text-xs text-muted-foreground font-mono">TRADING PSYCHOLOGY</span>
+              <span className="text-lg sm:text-xl font-bold text-gradient-primary">Guardian AI</span>
+              <span className="text-xs text-muted-foreground font-mono hidden sm:block">TRADING PSYCHOLOGY</span>
             </div>
           </Link>
           
-          <div className="hidden md:flex items-center space-x-8 text-sm">
+          <div className="hidden md:flex items-center space-x-6 lg:space-x-8 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">Features</a>
             <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">How It Works</a>
             <a href="#pricing" className="text-muted-foreground hover:text-primary transition-colors">Pricing</a>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Link href="/sign-in" className="btn-ghost">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Link href="/sign-in" className="btn-ghost text-sm sm:text-base px-3 sm:px-4 py-2">
               Sign In
             </Link>
-            <Link href="/sign-up" className="btn-primary group">
+            <Link href="/sign-up" className="btn-primary group text-sm sm:text-base px-3 sm:px-4 py-2">
               Get Started
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
@@ -142,12 +142,12 @@ function Navigation() {
 
 function DashboardPreview() {
   return (
-    <div className="relative glass-card p-6 rounded-2xl hover-lift">
+    <div className="relative glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl hover-lift">
       {/* Dashboard Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
-          <span className="text-sm font-mono text-muted-foreground">LIVE MONITORING</span>
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full animate-pulse"></div>
+          <span className="text-xs sm:text-sm font-mono text-muted-foreground">LIVE MONITORING</span>
         </div>
         <div className="text-xs text-muted-foreground font-mono">
           {new Date().toLocaleTimeString()}
@@ -155,8 +155,8 @@ function DashboardPreview() {
       </div>
 
       {/* Risk Status */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <span className="text-sm font-medium">Current Risk Level</span>
           <RiskIndicator level="low" label="Safe" />
         </div>
@@ -164,27 +164,27 @@ function DashboardPreview() {
       </div>
 
       {/* Trading Metrics */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="glass-card p-4 rounded-lg">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="glass-card p-3 sm:p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-success" />
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-success" />
             <span className="text-xs text-muted-foreground">Today's P&L</span>
           </div>
-          <div className="text-lg font-bold text-success">+₹2,340</div>
+          <div className="text-base sm:text-lg font-bold text-success">+₹2,340</div>
         </div>
-        <div className="glass-card p-4 rounded-lg">
+        <div className="glass-card p-3 sm:p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="h-4 w-4 text-primary" />
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             <span className="text-xs text-muted-foreground">Trades</span>
           </div>
-          <div className="text-lg font-bold text-foreground">8</div>
+          <div className="text-base sm:text-lg font-bold text-foreground">8</div>
         </div>
       </div>
 
       {/* AI Insights */}
-      <div className="glass-card p-4 rounded-lg border-l-4" style={{ borderLeftColor: 'hsl(var(--accent))' }}>
-        <div className="flex items-start gap-3">
-          <Bot className="h-5 w-5 text-accent mt-0.5 animate-pulse" />
+      <div className="glass-card p-3 sm:p-4 rounded-lg border-l-4" style={{ borderLeftColor: 'hsl(var(--accent))' }}>
+        <div className="flex items-start gap-2 sm:gap-3">
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-accent mt-0.5 animate-pulse" />
           <div>
             <div className="text-sm font-medium text-foreground mb-1">Guardian AI Insight</div>
             <div className="text-xs text-muted-foreground">
@@ -196,8 +196,8 @@ function DashboardPreview() {
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent/5 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 w-16 h-16 sm:w-24 sm:h-24 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute -bottom-2 sm:-bottom-4 -left-2 sm:-left-4 w-20 h-20 sm:w-32 sm:h-32 bg-accent/5 rounded-full blur-xl animate-pulse"></div>
     </div>
   )
 }
@@ -739,21 +739,21 @@ function Footer() {
   ]
 
   return (
-    <footer className="border-t border-border/50 py-12 relative">
+    <footer className="border-t border-border/50 py-8 sm:py-12 relative">
       <div className="container">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {/* Brand */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-primary to-accent p-2 rounded-lg">
-                <Shield className="h-6 w-6 text-white" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-gradient-to-r from-primary to-accent p-1.5 sm:p-2 rounded-lg">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <div className="font-bold text-foreground">Guardian AI</div>
+                <div className="font-bold text-foreground text-sm sm:text-base">Guardian AI</div>
                 <div className="text-xs text-muted-foreground">Trading Psychology</div>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               Advanced AI-powered trading psychology platform helping traders overcome emotional biases and achieve consistent results.
             </p>
           </div>
@@ -761,8 +761,8 @@ function Footer() {
           {/* Footer Sections */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h4 className="font-semibold text-foreground mb-4">{section.title}</h4>
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <h4 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">{section.title}</h4>
+              <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-muted-foreground">
                 {section.links.map((link) => (
                   <a key={link.text} href={link.href} className="block hover:text-primary transition-colors">
                     {link.text}
@@ -773,11 +773,11 @@ function Footer() {
           ))}
         </div>
 
-        <div className="border-t border-border/30 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-muted-foreground mb-4 md:mb-0">
+        <div className="border-t border-border/30 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             © 2024 Guardian AI. All rights reserved.
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
             <span>All systems operational</span>
           </div>
