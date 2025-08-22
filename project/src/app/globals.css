@@ -98,6 +98,58 @@
   }
 
   /* Modern Focus Styles */
+
+  /* Markdown Prose Styles for Chat */
+  .prose {
+    @apply text-foreground;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply text-foreground font-semibold;
+  }
+
+  .prose p {
+    @apply text-foreground mb-3 last:mb-0;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply text-foreground mb-3 space-y-1;
+  }
+
+  .prose li {
+    @apply text-foreground;
+  }
+
+  .prose strong {
+    @apply text-foreground font-semibold;
+  }
+
+  .prose em {
+    @apply text-foreground italic;
+  }
+
+  .prose code {
+    @apply bg-muted text-foreground px-1.5 py-0.5 rounded text-xs font-mono;
+  }
+
+  .prose pre {
+    @apply bg-muted text-foreground p-3 rounded-lg text-xs font-mono overflow-x-auto;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted-foreground;
+  }
+
+  .prose a {
+    @apply text-primary hover:text-primary/80 underline;
+  }
+
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ring/60 rounded-md;
   }

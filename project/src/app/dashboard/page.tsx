@@ -164,15 +164,26 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's your trading overview.</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchDashboardData}
-          disabled={loading}
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchDashboardData}
+            disabled={loading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => window.location.href = '/dashboard/ai-summary'}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          >
+            <Brain className="h-4 w-4 mr-2" />
+            AI Summary
+          </Button>
+        </div>
       </div>
 
       {/* Content */}

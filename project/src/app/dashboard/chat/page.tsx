@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { useUserSync } from '@/hooks/useUserSync'
+import { useUser } from '@clerk/nextjs'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { 
   Send, 
   Bot, 
@@ -44,7 +46,7 @@ interface SuggestedPrompt {
 }
 
 export default function ChatPage() {
-  const { user } = useUserSync()
+  const { user: clerkUser, isLoaded, isSignedIn } = useUser()
   const { toast } = useToast()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState('')
@@ -53,60 +55,31 @@ export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Check if user is loaded
-  const isUserLoaded = !!user?.id
+  // Check if user is loaded - use Clerk user directly
+  const isUserLoaded = isLoaded && isSignedIn && !!clerkUser?.id
 
-  // Welcome message
+  // Welcome message - show immediately
   useEffect(() => {
     if (messages.length === 0) {
-      if (isUserLoaded) {
-        setMessages([
-          {
-            id: 'welcome',
-            role: 'assistant',
-            content: `Hello! I'm your Guardian AI trading assistant. I can analyze your trading data, provide insights on performance, risk management, and help you understand your trading psychology. 
-
-What would you like to know about your trading?`,
-            timestamp: new Date(),
-            metadata: {
-              insights: ['Welcome to Guardian AI', 'Ready to analyze your trades', 'Ask me anything about your trading']
-            }
-          }
-        ])
-      } else {
-        setMessages([
-          {
-            id: 'loading',
-            role: 'assistant',
-            content: `Hello! I'm your Guardian AI trading assistant. I'm loading your trading data to provide personalized insights. Please wait a moment...`,
-            timestamp: new Date(),
-            metadata: {
-              insights: ['Loading user data', 'Preparing AI assistant', 'Setting up trading context']
-            }
-          }
-        ])
-      }
-    }
-  }, [messages.length, isUserLoaded])
-
-  // Update welcome message when user loads
-  useEffect(() => {
-    if (isUserLoaded && messages.length === 1 && messages[0].id === 'loading') {
       setMessages([
         {
           id: 'welcome',
           role: 'assistant',
-          content: `Hello! I'm your Guardian AI trading assistant. I can analyze your trading data, provide insights on performance, risk management, and help you understand your trading psychology. 
+          content: `Hello! I'm your Guardian AI trading assistant! 👋
+
+I can analyze your trading data, provide insights on performance, risk management, and help you understand your trading psychology. 
+
+I have access to your complete trading history and AI-generated insights. I can help you understand your behavioral patterns, risk management effectiveness, and provide personalized recommendations based on your actual performance data.
 
 What would you like to know about your trading?`,
           timestamp: new Date(),
           metadata: {
-            insights: ['Welcome to Guardian AI', 'Ready to analyze your trades', 'Ask me anything about your trading']
+            insights: ['Welcome to Guardian AI', 'AI Summary Integrated', 'Ready to analyze your trades', 'Ask me anything about your trading']
           }
         }
       ])
     }
-  }, [isUserLoaded, messages])
+  }, [messages.length])
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -117,33 +90,43 @@ What would you like to know about your trading?`,
 
   const suggestedPrompts: SuggestedPrompt[] = [
     {
-      text: "How is my trading performance this month?",
+      text: "Analyze my trading performance using AI insights",
       category: "performance",
-      icon: <TrendingUp className="h-4 w-4" />
+      icon: <Brain className="h-4 w-4" />
     },
     {
-      text: "What are my biggest risk factors?",
+      text: "What does my AI summary say about my risk management?",
       category: "risk",
       icon: <AlertTriangle className="h-4 w-4" />
     },
     {
-      text: "Which symbols am I most successful with?",
-      category: "analysis",
-      icon: <BarChart3 className="h-4 w-4" />
-    },
-    {
-      text: "How can I improve my trading psychology?",
+      text: "How can I improve based on my behavioral patterns?",
       category: "psychology",
       icon: <Brain className="h-4 w-4" />
     },
     {
-      text: "What's my win rate and average P&L?",
+      text: "Which symbols should I focus on based on my history?",
+      category: "analysis",
+      icon: <BarChart3 className="h-4 w-4" />
+    },
+    {
+      text: "What are my trading strengths and weaknesses?",
       category: "performance",
       icon: <Target className="h-4 w-4" />
     },
     {
-      text: "When am I most active in trading?",
+      text: "How can I optimize my trading strategy?",
       category: "analysis",
+      icon: <TrendingUp className="h-4 w-4" />
+    },
+    {
+      text: "What psychological factors affect my trading?",
+      category: "psychology",
+      icon: <Brain className="h-4 w-4" />
+    },
+    {
+      text: "Compare my performance across different time periods",
+      category: "performance",
       icon: <Clock className="h-4 w-4" />
     }
   ]
@@ -151,13 +134,31 @@ What would you like to know about your trading?`,
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return
     
-    // Check if user is loaded
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "Please wait for user data to load before sending messages.",
-        variant: "destructive",
-      })
+    // Simple check for user ID
+    if (!clerkUser?.id) {
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: inputMessage,
+        timestamp: new Date()
+      }
+
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `I can see your message: "${inputMessage}"
+
+I'm here to help with your trading questions! However, I need to verify your account to access your trading data and provide personalized insights.
+
+Please make sure you're logged in, and then I'll be able to analyze your trading performance and give you specific advice based on your actual data!`,
+        timestamp: new Date(),
+        metadata: {
+          insights: ['Account Verification Needed', 'General Advice Available', 'Personalized Insights Coming Soon']
+        }
+      }
+
+      setMessages(prev => [...prev, userMessage, assistantMessage])
+      setInputMessage('')
       return
     }
 
@@ -181,7 +182,7 @@ What would you like to know about your trading?`,
         },
         body: JSON.stringify({
           message: inputMessage,
-          userId: user.id
+          userId: clerkUser.id
         }),
       })
 
@@ -221,11 +222,19 @@ What would you like to know about your trading?`,
         }
       }
       
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      const errorResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `I encountered an error while processing your request: ${errorMessage}
+
+Please try again in a moment, or ask a different question.`,
+        timestamp: new Date(),
+        metadata: {
+          insights: ['Error Occurred', 'Please Retry', 'Alternative Questions Welcome']
+        }
+      }
+
+      setMessages(prev => [...prev, errorResponse])
     } finally {
       setIsLoading(false)
       setIsTyping(false)
@@ -254,9 +263,12 @@ What would you like to know about your trading?`,
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
-            <p className="text-sm text-muted-foreground">Your personal trading intelligence companion</p>
+            <p className="text-sm text-muted-foreground">
+              Your personal trading intelligence companion
+            </p>
           </div>
         </div>
+
       </div>
 
       {/* Chat Messages Area */}
@@ -276,16 +288,40 @@ What would you like to know about your trading?`,
                   </div>
                 )}
                 
-                <div
-                  className={`max-w-[80%] p-4 rounded-2xl ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card border border-border'
-                  }`}
-                >
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </div>
+                                 <div
+                   className={`max-w-[80%] p-4 rounded-2xl ${
+                     message.role === 'user'
+                       ? 'bg-primary text-primary-foreground'
+                       : 'bg-card border border-border'
+                   }`}
+                 >
+                   <div className="text-sm leading-relaxed">
+                     {message.role === 'assistant' ? (
+                       <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:text-foreground prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground">
+                         <ReactMarkdown 
+                           remarkPlugins={[remarkGfm]}
+                           components={{
+                             h1: ({node, ...props}) => <h1 className="text-lg font-semibold mb-2" {...props} />,
+                             h2: ({node, ...props}) => <h2 className="text-base font-semibold mb-2" {...props} />,
+                             h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1" {...props} />,
+                             p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                             ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                             ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                             li: ({node, ...props}) => <li className="text-sm" {...props} />,
+                             strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                             em: ({node, ...props}) => <em className="italic text-foreground" {...props} />,
+                             code: ({node, ...props}) => <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...props} />,
+                             pre: ({node, ...props}) => <pre className="bg-muted p-2 rounded text-xs font-mono overflow-x-auto" {...props} />,
+                             blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-primary pl-3 italic text-muted-foreground" {...props} />,
+                           }}
+                         >
+                           {message.content}
+                         </ReactMarkdown>
+                       </div>
+                     ) : (
+                       <div className="whitespace-pre-wrap">{message.content}</div>
+                     )}
+                   </div>
                   
                   {message.metadata?.insights && (
                     <div className="mt-3 pt-3 border-t border-border/20">
@@ -357,7 +393,7 @@ What would you like to know about your trading?`,
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask me anything..."
+              placeholder="Ask me anything about your trading..."
               className="flex-1 border-border/50 focus:border-primary focus:ring-primary/20 rounded-xl"
               disabled={isLoading}
             />
@@ -376,23 +412,21 @@ What would you like to know about your trading?`,
           </div>
 
           {/* Suggested Prompts */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium">Suggested prompts:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Quick prompts:</span>
+            <div className="flex flex-wrap gap-1">
               {suggestedPrompts.map((prompt, index) => (
                 <Button
                   key={index}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handleSuggestedPrompt(prompt.text)}
-                  className="h-8 px-3 text-xs border-border/50 hover:border-primary/50 hover:bg-primary/5 rounded-lg transition-colors"
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
                   disabled={isLoading}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {prompt.icon}
-                    <span>{prompt.text}</span>
+                    <span className="truncate max-w-32">{prompt.text}</span>
                   </div>
                 </Button>
               ))}
@@ -403,3 +437,4 @@ What would you like to know about your trading?`,
     </div>
   )
 }
+

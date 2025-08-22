@@ -1,242 +1,265 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { prisma } from '@/lib/prisma'
 
-// Initialize Gemini AI
+// Initialize Gemini with improved model
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+interface TradingData {
+  hasData: boolean;
+  totalTrades?: number;
+  totalNetProfitLoss?: number;
+  winRate?: number;
+  avgProfitLoss?: number;
+  totalCapital?: number;
+  riskPerTrade?: number;
+  openPositions?: number;
+  hourlyPerformance?: Array<{ hour: number; avgPnL: number; total: number; count: number }>;
+  dailyPerformance?: Array<{ day: string; avgPnL: number; total: number; count: number }>;
+  symbolPerformance?: Array<{ symbol: string; avgPnL: number; total: number; count: number }>;
+  recentTrades?: Array<{
+    symbol: string;
+    pnl: number;
+    quantity: number;
+    buyPrice: number;
+    sellPrice: number;
+    tradeDate: string;
+  }>;
+  aiInsights?: {
+    behavioralPatterns: string[];
+    riskAssessment: string;
+    recommendations: string[];
+    strengths: string[];
+    improvementAreas: string[];
+  };
+}
 
 export async function POST(request: NextRequest) {
-    try {
-        const clerkUser = await currentUser()
-        if (!clerkUser) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const { message, userId } = await request.json()
-
-        if (!message || !userId) {
-            console.error('Chat API validation error:', { message: !!message, userId: !!userId })
-            return NextResponse.json({ error: 'Message and userId are required' }, { status: 400 })
-        }
-
-        // Check if Gemini API key is configured
-        if (!process.env.GEMINI_API_KEY) {
-            console.error('Gemini API key not configured')
-            return NextResponse.json({ error: 'AI service not configured' }, { status: 500 })
-        }
-
-        // Fetch user's trading data for context
-        const userData = await prisma.user.findUnique({
-            where: { id: userId },
-            include: {
-                rawTrades: {
-                    orderBy: { tradeDatetime: 'desc' },
-                    take: 100 // Limit to recent trades for context
-                },
-                matchedTrades: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 100
-                },
-                riskSessions: {
-                    orderBy: { sessionDate: 'desc' },
-                    take: 20
-                },
-                guardianInsights: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 20
-                }
-            }
-        })
-
-        if (!userData) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Prepare trading data summary for AI context
-        const tradingSummary = prepareTradingSummary(userData)
-
-        // Create AI prompt with trading context
-        const aiPrompt = createAIPrompt(message, tradingSummary)
-
-        // Get AI response from Gemini
-        const aiResponse = await getGeminiResponse(aiPrompt, tradingSummary)
-
-        // Extract metadata from the response
-        const metadata = extractMetadata(tradingSummary, message)
-
-        return NextResponse.json({
-            success: true,
-            response: aiResponse,
-            metadata
-        })
-
-    } catch (error) {
-        console.error('Chat API error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  try {
+    const clerkUser = await currentUser()
+    if (!clerkUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { message } = await request.json()
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
+
+    // Fetch user data with ALL raw trades and summary
+    let userData: any = {}
+    try {
+      userData = await prisma.user.findUnique({
+        where: { clerkUserId: clerkUser.id },
+        include: {
+          rawTrades: { orderBy: { tradeDatetime: 'desc' } }, // Get ALL raw trades
+          matchedTrades: { orderBy: { createdAt: 'desc' } },
+          openTrades: { orderBy: { createdAt: 'desc' } },
+          tradingSummaries: { take: 1, orderBy: { generatedAt: 'desc' } }, // Latest summary only
+          onboarding: true,
+        },
+      })
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      // Continue with empty data
+    }
+
+    // Generate chat response with direct data
+    const response = await generateDirectChatResponse(message, userData || {})
+
+    // Extract metadata
+    const metadata = extractDirectMetadata(message, userData || {})
+
+    return NextResponse.json({
+      response,
+      metadata
+    })
+
+  } catch (error) {
+    console.error('Chat API error:', error)
+    return NextResponse.json({
+      error: 'Failed to process chat request'
+    }, { status: 500 })
+  }
 }
 
-function prepareTradingSummary(userData: any) {
-    const rawTrades = userData.rawTrades || []
-    const matchedTrades = userData.matchedTrades || []
-    const riskSessions = userData.riskSessions || []
-    const guardianInsights = userData.guardianInsights || []
 
-    // Calculate performance metrics
-    const totalTrades = matchedTrades.length
-    const winningTrades = matchedTrades.filter((t: any) => Number(t.pnl) > 0).length
-    const losingTrades = matchedTrades.filter((t: any) => Number(t.pnl) < 0).length
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
 
-    const totalPnl = matchedTrades.reduce((sum: number, t: any) => sum + Number(t.pnl), 0)
-    const avgPnl = totalTrades > 0 ? totalPnl / totalTrades : 0
+async function generateDirectChatResponse(message: string, userData: any): Promise<string> {
+  try {
+    const prompt = createDirectPrompt(message, userData)
+
+    if (!process.env.GEMINI_API_KEY) {
+      return getDirectFallbackResponse(message, userData)
+    }
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+
+    return response.text()
+  } catch (error) {
+    console.error('Gemini API error:', error)
+    return getDirectFallbackResponse(message, userData)
+  }
+}
+
+function createDirectPrompt(message: string, userData: any): string {
+  const hasRawTrades = userData?.rawTrades && userData.rawTrades.length > 0
+  const hasSummary = userData?.tradingSummaries && userData.tradingSummaries.length > 0
+  const latestSummary = hasSummary ? userData.tradingSummaries[0] : null
+
+  let prompt = `You are Guardian AI, an expert Indian trading advisor. Answer the user's question based on their trading data.
+
+**User Profile:**
+- Capital: ₹${userData?.totalCapital?.toLocaleString('en-IN') || '0'}
+- Risk per trade: ${userData?.riskPerTradePct || '0'}%
+- Experience: ${userData?.onboarding?.experience || 'Not specified'}
+
+**User Question:** "${message}"
+
+`
+
+  if (hasRawTrades) {
+    prompt += `**Raw Trading Data (${userData.rawTrades.length} trades):**
+${userData.rawTrades.slice(0, 50).map((trade: any, index: number) =>
+      `${index + 1}. ${trade.symbol} | ${trade.tradeType} | ${trade.quantity} shares @ ₹${trade.price} | ${new Date(trade.tradeDatetime).toLocaleDateString('en-IN')}`
+    ).join('\n')}
+
+${userData.rawTrades.length > 50 ? `... and ${userData.rawTrades.length - 50} more trades` : ''}
+
+`
+  }
+
+  if (hasSummary && latestSummary?.summaryData) {
+    prompt += `**Latest AI Trading Summary:**
+${JSON.stringify(latestSummary.summaryData, null, 2)}
+
+`
+  }
+
+  prompt += `**Instructions:**
+1. Answer the user's question directly using their trading data
+2. Format currency in Indian Rupees (₹) with proper formatting
+3. Use Indian market context (NSE, BSE, SEBI)
+4. Be specific and actionable
+5. Include emojis for better readability
+6. If no data, provide general trading advice
+
+**Response:** Provide a comprehensive, helpful answer based on the available data.`
+
+  return prompt
+}
+
+function getDirectFallbackResponse(message: string, userData: any): string {
+  const hasRawTrades = userData?.rawTrades && userData.rawTrades.length > 0
+  const hasSummary = userData?.tradingSummaries && userData.tradingSummaries.length > 0
+
+  if (!hasRawTrades) {
+    return `Hello! I'm Guardian AI, your trading assistant. 👋
+
+I notice you don't have trading data uploaded yet. To provide personalized insights, I'd need access to your trading history.
+
+**In the meantime, I can help with:**
+📚 General trading strategies and psychology
+⚖️ Risk management principles
+📊 Technical analysis concepts
+🎯 Goal setting for traders
+💡 Market psychology and behavioral trading
+
+**To get personalized analysis, please:**
+1. Upload your trading data/CSV files
+2. Connect your broker account
+3. Generate an AI trading summary
+
+What specific trading topic would you like to discuss today?`
+  }
+
+  // Quick analysis from raw data
+  const totalTrades = userData.rawTrades.length
+  const buyTrades = userData.rawTrades.filter((t: any) => t.tradeType === 'BUY').length
+  const sellTrades = userData.rawTrades.filter((t: any) => t.tradeType === 'SELL').length
+
+  return `Based on your trading data, I can see some interesting patterns! 📊
+
+**Your Trading Snapshot:**
+- Total Trades: ${totalTrades}
+- Buy Trades: ${buyTrades}
+- Sell Trades: ${sellTrades}
+- Capital: ₹${userData?.totalCapital?.toLocaleString('en-IN') || '0'}
+
+**Quick Analysis:**
+${buyTrades > sellTrades ? '📈 You have more buy trades than sell trades - this suggests you might be building positions' : '📉 You have more sell trades than buy trades - this suggests you might be taking profits or reducing positions'}
+
+**Regarding your question:** "${message}"
+
+I'm experiencing a temporary technical issue with my AI analysis engine. However, I can still provide insights based on your ${totalTrades} trades.
+
+**Next Steps:**
+1. Review your trading patterns in the analytics section
+2. Generate an AI trading summary for deeper insights
+3. Connect your broker for real-time data
+
+Please try your question again in a moment!`
+}
+
+function extractDirectMetadata(userMessage: string, userData: any) {
+  const message = userMessage.toLowerCase()
+  const hasRawTrades = userData?.rawTrades && userData.rawTrades.length > 0
+  const hasSummary = userData?.tradingSummaries && userData.tradingSummaries.length > 0
+
+  const insights = []
+
+  if (hasRawTrades) {
+    const totalTrades = userData.rawTrades.length
+    const buyTrades = userData.rawTrades.filter((t: any) => t.tradeType === 'BUY').length
+    const sellTrades = userData.rawTrades.filter((t: any) => t.tradeType === 'SELL').length
+
+    insights.push(`${totalTrades} trades analyzed`)
+    insights.push(`${buyTrades} buy trades`)
+    insights.push(`${sellTrades} sell trades`)
 
     // Get unique symbols
-    const symbols = [...new Set(matchedTrades.map((t: any) => t.symbol))]
-
-    // Time analysis
-    const tradeDates = matchedTrades.map((t: any) => new Date(t.createdAt))
-    const timeRange = tradeDates.length > 0 ? {
-        start: new Date(Math.min(...tradeDates.map((d: Date) => d.getTime()))),
-        end: new Date(Math.max(...tradeDates.map((d: Date) => d.getTime())))
-    } : null
-
-    // Risk analysis
-    const maxDrawdown = riskSessions.length > 0 ?
-        Math.max(...riskSessions.map((r: any) => Number(r.currentDrawdownPct))) : 0
-
-    const consecutiveLosses = riskSessions.length > 0 ?
-        Math.max(...riskSessions.map((r: any) => r.consecutiveLosses)) : 0
-
-    return {
-        userProfile: {
-            name: userData.name,
-            totalCapital: Number(userData.totalCapital),
-            riskPerTradePct: Number(userData.riskPerTradePct),
-            maxDailyDrawdownPct: Number(userData.maxDailyDrawdownPct),
-            maxConsecutiveLosses: userData.maxConsecutiveLosses
-        },
-        performance: {
-            totalTrades,
-            winningTrades,
-            losingTrades,
-            winRate: Math.round(winRate * 100) / 100,
-            totalPnl: Math.round(totalPnl * 100) / 100,
-            avgPnl: Math.round(avgPnl * 100) / 100
-        },
-        symbols,
-        timeRange,
-        riskMetrics: {
-            maxDrawdown: Math.round(maxDrawdown * 100) / 100,
-            consecutiveLosses,
-            riskSessionsCount: riskSessions.length
-        },
-        insights: guardianInsights.map((i: any) => i.insight),
-        recentTrades: matchedTrades.slice(0, 10).map((t: any) => ({
-            symbol: t.symbol,
-            pnl: Number(t.pnl),
-            pnlPct: Number(t.pnlPct),
-            createdAt: t.createdAt
-        }))
+    const symbols = [...new Set(userData.rawTrades.map((t: any) => t.symbol))]
+    if (symbols.length > 0) {
+      insights.push(`${symbols.length} symbols traded`)
+      insights.push(`${symbols[0]} most traded`)
     }
-}
+  }
 
-function createAIPrompt(userMessage: string, tradingSummary: any) {
-    return `You are Guardian AI, an expert trading psychology and risk management AI assistant. You have access to a trader's data and should provide personalized, actionable insights.
+  if (hasSummary) {
+    insights.push('AI Summary Available')
+  }
 
-TRADER'S PROFILE:
-- Name: ${tradingSummary.userProfile.name}
-- Total Capital: ₹${tradingSummary.userProfile.totalCapital.toLocaleString()}
-- Risk per Trade: ${tradingSummary.userProfile.riskPerTradePct}%
-- Max Daily Drawdown: ${tradingSummary.userProfile.maxDailyDrawdownPct}%
-- Max Consecutive Losses: ${tradingSummary.userProfile.maxConsecutiveLosses}
+  if (message.includes('risk') || message.includes('safety')) {
+    insights.push('Risk Management Focus')
+  }
 
-TRADING PERFORMANCE:
-- Total Trades: ${tradingSummary.performance.totalTrades}
-- Win Rate: ${tradingSummary.performance.winRate}%
-- Total P&L: ₹${tradingSummary.performance.totalPnl.toLocaleString()}
-- Average P&L per Trade: ₹${tradingSummary.performance.avgPnl.toLocaleString()}
-- Symbols Traded: ${tradingSummary.symbols.join(', ') || 'None yet'}
+  if (message.includes('psychology') || message.includes('mindset')) {
+    insights.push('Psychology Analysis')
+  }
 
-RISK METRICS:
-- Max Drawdown: ${tradingSummary.riskMetrics.maxDrawdown}%
-- Consecutive Losses: ${tradingSummary.riskMetrics.consecutiveLosses}
-- Risk Sessions: ${tradingSummary.riskMetrics.riskSessionsCount}
+  if (message.includes('performance') || message.includes('profit')) {
+    insights.push('Performance Review')
+  }
 
-RECENT INSIGHTS: ${tradingSummary.insights.join('; ') || 'No insights yet'}
+  if (message.includes('strategy') || message.includes('plan')) {
+    insights.push('Strategy Development')
+  }
 
-USER QUESTION: "${userMessage}"
+  if (message.includes('pattern') || message.includes('timing')) {
+    insights.push('Pattern Analysis')
+  }
 
-INSTRUCTIONS:
-1. Analyze the user's trading data to provide personalized insights
-2. Focus on actionable advice for improvement
-3. Use the trader's actual performance metrics in your response
-4. Be encouraging but honest about areas for improvement
-5. Provide specific, practical recommendations
-6. Keep responses conversational and engaging
-7. If the user asks about specific metrics, calculate and show them
-8. Always consider risk management and psychology aspects
-
-Respond in a helpful, coaching tone as if you're a personal trading mentor.`
-}
-
-async function getGeminiResponse(prompt: string, tradingSummary: any) {
-    try {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error('Gemini API key not configured')
-        }
-
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
-        const result = await model.generateContent(prompt)
-        const response = await result.response
-        const text = response.text()
-
-        return text
-    } catch (error) {
-        console.error('Gemini API error:', error)
-
-        // Return a fallback response with basic trading data
-        return `I apologize, but I'm having trouble connecting to my AI services right now. However, I can still help you with some basic analysis based on your trading data.
-
-From what I can see in your profile:
-- You have ${tradingSummary.performance.totalTrades} total trades
-- Your win rate is ${tradingSummary.performance.winRate}%
-- You're trading with ₹${tradingSummary.userProfile.totalCapital.toLocaleString()} capital
-
-Please try asking your question again in a moment, or you can explore the analytics dashboard for detailed insights.`
-    }
-}
-
-function extractMetadata(tradingSummary: any, userMessage: string) {
-    const metadata: any = {
-        tradeCount: tradingSummary.performance.totalTrades,
-        symbols: tradingSummary.symbols,
-        timeRange: tradingSummary.timeRange ?
-            `${tradingSummary.timeRange.start.toLocaleDateString()} - ${tradingSummary.timeRange.end.toLocaleDateString()}` :
-            'No trades yet'
-    }
-
-    // Extract insights based on message content
-    const insights: string[] = []
-
-    if (userMessage.toLowerCase().includes('performance')) {
-        insights.push(`Win Rate: ${tradingSummary.performance.winRate}%`)
-        insights.push(`Total P&L: ₹${tradingSummary.performance.totalPnl.toLocaleString()}`)
-    }
-
-    if (userMessage.toLowerCase().includes('risk')) {
-        insights.push(`Max Drawdown: ${tradingSummary.riskMetrics.maxDrawdown}%`)
-        insights.push(`Risk per Trade: ${tradingSummary.userProfile.riskPerTradePct}%`)
-    }
-
-    if (userMessage.toLowerCase().includes('symbol')) {
-        insights.push(`Trading ${tradingSummary.symbols.length} symbols`)
-        insights.push(`Most active: ${tradingSummary.symbols.slice(0, 3).join(', ')}`)
-    }
-
-    metadata.insights = insights.length > 0 ? insights : ['AI-powered analysis', 'Personalized insights', 'Risk-aware recommendations']
-
-    return metadata
+  return {
+    tradeCount: hasRawTrades ? userData.rawTrades.length : 0,
+    symbols: hasRawTrades ? [...new Set(userData.rawTrades.map((t: any) => t.symbol))] : [],
+    timeRange: hasRawTrades ? 'Raw trading data' : 'No data available',
+    insights,
+    hasAISummary: hasSummary,
+    hasData: hasRawTrades,
+    capital: userData?.totalCapital || 0,
+    riskPerTrade: userData?.riskPerTradePct || 0
+  }
 }

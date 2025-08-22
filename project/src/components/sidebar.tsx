@@ -20,7 +20,8 @@ import {
   Home,
   TrendingUp,
   Bot,
-  ChevronUp
+  ChevronUp,
+  Brain
 } from 'lucide-react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useTheme } from 'next-themes'
@@ -29,6 +30,7 @@ import { useState, useEffect } from 'react'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'AI Summary', href: '/dashboard/ai-summary', icon: Brain },
   { name: 'Upload', href: '/dashboard/upload', icon: Upload },
   { name: 'AI Chat', href: '/dashboard/chat', icon: Bot },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
