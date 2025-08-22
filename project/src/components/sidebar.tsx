@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { 
   BarChart3, 
   Upload, 
@@ -15,17 +16,21 @@ import {
   Sun,
   Moon,
   Menu,
-  X
+  X,
+  Home,
+  TrendingUp,
+  Bot,
+  ChevronUp
 } from 'lucide-react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Upload', href: '/dashboard/upload', icon: Upload },
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-  { name: 'AI Chat', href: '/dashboard/chat', icon: MessageSquare },
+  { name: 'Upload', href: '/dashboard/upload', icon: Upload },
+  { name: 'AI Chat', href: '/dashboard/chat', icon: Bot },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
@@ -36,6 +41,7 @@ export function Sidebar() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -78,8 +84,8 @@ export function Sidebar() {
         <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm">
           <div className="flex flex-col h-full">
             {/* Mobile Header */}
-            <div className="flex h-16 items-center justify-between border-b px-6">
-              <h1 className="text-xl font-bold text-primary">GurdianAI</h1>
+            <div className="flex h-16 items-center justify-between border-b border-border/50 px-6">
+              <h1 className="text-xl font-bold text-primary">GuardianAI</h1>
               <Button
                 variant="ghost"
                 size="sm"
@@ -101,13 +107,13 @@ export function Sidebar() {
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium transition-colors',
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       )}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-4 w-4" />
                       {item.name}
                     </Link>
                   )
@@ -115,60 +121,67 @@ export function Sidebar() {
               </nav>
             </ScrollArea>
 
-            {/* Mobile User Profile Section */}
-            <div className="border-t p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {user?.firstName || user?.emailAddresses[0]?.emailAddress || 'User'}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user?.emailAddresses[0]?.emailAddress}
-                  </p>
-                </div>
-              </div>
-
-              {/* Mobile Theme Toggle and Sign Out */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleTheme}
-                  className="flex-1 h-10"
-                >
-                  {theme === 'light' ? (
-                    <Moon className="h-4 w-4" />
-                  ) : (
-                    <Sun className="h-4 w-4" />
-                  )}
-                  <span className="ml-2 text-sm">
-                    {theme === 'light' ? 'Dark' : 'Light'}
-                  </span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="h-10 px-4 text-destructive border-destructive/20 hover:bg-destructive/10"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="ml-2 text-sm">Sign Out</span>
-                </Button>
-              </div>
+            {/* Mobile Footer */}
+            <div className="border-t border-border/50 p-4 space-y-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleTheme}
+                className="w-full justify-start"
+              >
+                {theme === 'light' ? (
+                  <>
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark Mode
+                  </>
+                ) : (
+                  <>
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light Mode
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="w-full justify-start text-destructive hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden lg:flex h-full w-64 flex-col bg-background border-r">
-        {/* Logo/Brand */}
-        <div className="flex h-16 items-center border-b px-6">
-          <h1 className="text-xl font-bold text-primary">GurdianAI</h1>
+      {/* Desktop Sidebar */}
+      <div className={cn(
+        "hidden lg:flex flex-col border-r border-border/50 bg-background transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64"
+      )}>
+        {/* Sidebar Header */}
+        <div className="flex h-16 items-center justify-between px-4 border-b border-border/50">
+          {!isCollapsed && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-lg text-foreground">GuardianAI</span>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronUp className={cn(
+              "h-4 w-4 transition-transform",
+              isCollapsed && "rotate-180"
+            )} />
+          </Button>
         </div>
 
         {/* Navigation */}
@@ -181,63 +194,78 @@ export function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group",
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.name}
+                  {!isCollapsed && <span>{item.name}</span>}
                 </Link>
               )
             })}
           </nav>
         </ScrollArea>
 
-        {/* User Profile Section */}
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+        {/* Sidebar Footer */}
+        <div className="border-t border-border/50 p-4 space-y-3">
+          {/* Theme Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleTheme}
+            className={cn(
+              "w-full justify-start",
+              isCollapsed && "w-10 px-0"
+            )}
+          >
+            {theme === 'light' ? (
+              <>
+                <Moon className="h-4 w-4" />
+                {!isCollapsed && <span className="ml-2">Dark Mode</span>}
+              </>
+            ) : (
+              <>
+                <Sun className="h-4 w-4" />
+                {!isCollapsed && <span className="ml-2">Light Mode</span>}
+              </>
+            )}
+          </Button>
+
+          {/* User Profile */}
+          <div className={cn(
+            "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
+            isCollapsed && "justify-center"
+          )}>
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
               <User className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {user?.firstName || user?.emailAddresses[0]?.emailAddress || 'User'}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user?.emailAddresses[0]?.emailAddress}
-              </p>
-            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user?.firstName || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.emailAddresses[0]?.emailAddress || 'user@example.com'}
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Theme Toggle and Sign Out */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleTheme}
-              className="flex-1 h-8"
-            >
-              {theme === 'light' ? (
-                <Moon className="h-3 w-3" />
-              ) : (
-                <Sun className="h-3 w-3" />
-              )}
-              <span className="ml-2 text-xs">
-                {theme === 'light' ? 'Dark' : 'Light'}
-              </span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="h-8 px-3 text-destructive border-destructive/20 hover:bg-destructive/10"
-            >
-              <LogOut className="h-3 w-3" />
-            </Button>
-          </div>
+          {/* Sign Out */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSignOut}
+            className={cn(
+              "w-full justify-start text-destructive hover:text-destructive",
+              isCollapsed && "w-10 px-0"
+            )}
+          >
+            <LogOut className="h-4 w-4" />
+            {!isCollapsed && <span className="ml-2">Sign Out</span>}
+          </Button>
         </div>
       </div>
     </>

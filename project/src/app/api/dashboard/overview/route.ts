@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
         const user = await prisma.user.findUnique({
             where: { clerkUserId: clerkUser.id },
-            select: { id: true }
+            select: { id: true, totalCapital: true }
         })
 
         if (!user) {
@@ -94,9 +94,8 @@ export async function GET(request: NextRequest) {
             riskMessage = 'Approaching daily loss limit'
         }
 
-        // Calculate session duration (mock for now - would need real session tracking)
-        const sessionStart = new Date(today.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
-        const sessionDuration = Math.floor((today.getTime() - sessionStart.getTime()) / (1000 * 60))
+        // Calculate total portfolio value (replacing session time)
+        const totalPortfolioValue = Number(user.totalCapital) + todayPnL
 
         // Get max drawdown from recent trades
         let maxDrawdown = 0
@@ -123,6 +122,75 @@ export async function GET(request: NextRequest) {
 
         // Calculate max drawdown percentage based on the peak value
         maxDrawdownPct = peak > 0 ? (maxDrawdown / peak) * 100 : 0
+
+        // Generate P&L data for today's chart (hourly data)
+        const pnlData: Array<{ time: string; pnl: number }> = []
+        const hourlyPnL = new Map<number, number>()
+
+        // Initialize hourly buckets
+        for (let hour = 9; hour <= 16; hour++) {
+            hourlyPnL.set(hour, 0)
+        }
+
+        // Aggregate trades by hour
+        todayTrades.forEach(trade => {
+            const tradeHour = new Date(trade.buyDate).getHours()
+            if (hourlyPnL.has(tradeHour)) {
+                hourlyPnL.set(tradeHour, hourlyPnL.get(tradeHour)! + Number(trade.pnl))
+            }
+        })
+
+        // Convert to chart data format
+        hourlyPnL.forEach((pnl, hour) => {
+            pnlData.push({
+                time: `${hour}:00`,
+                pnl: Math.round(pnl * 100) / 100
+            })
+        })
+
+        // Get trade distribution (wins vs losses) for the last 30 days
+        const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const recentTradesForDistribution = await prisma.matchedTrade.findMany({
+            where: {
+                userId: user.id,
+                createdAt: { gte: thirtyDaysAgo }
+            }
+        })
+
+        const totalTrades = recentTradesForDistribution.length
+        const winningTrades = recentTradesForDistribution.filter(trade => Number(trade.pnl) > 0).length
+        const losingTrades = totalTrades - winningTrades
+
+        const tradeDistribution: Array<{ name: string; value: number; color: string }> = [
+            { name: 'Wins', value: totalTrades > 0 ? Math.round((winningTrades / totalTrades) * 100) : 0, color: '#10b981' },
+            { name: 'Losses', value: totalTrades > 0 ? Math.round((losingTrades / totalTrades) * 100) : 0, color: '#ef4444' }
+        ]
+
+        // Get weekly performance data (last 5 trading days)
+        const weeklyPerformance: Array<{ day: string; trades: number; pnl: number }> = []
+        for (let i = 4; i >= 0; i--) {
+            const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000)
+            const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+            const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+
+            const dayTrades = await prisma.matchedTrade.findMany({
+                where: {
+                    userId: user.id,
+                    OR: [
+                        { buyDate: { gte: dayStart, lt: dayEnd } },
+                        { sellDate: { gte: dayStart, lt: dayEnd } }
+                    ]
+                }
+            })
+
+            const dayPnL = dayTrades.reduce((sum, trade) => sum + Number(trade.pnl), 0)
+
+            weeklyPerformance.push({
+                day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                trades: dayTrades.length,
+                pnl: Math.round(dayPnL * 100) / 100
+            })
+        }
 
         // Generate activity feed
         const activityFeed: Array<{
@@ -169,7 +237,7 @@ export async function GET(request: NextRequest) {
                     pnl: Math.round(todayPnL * 100) / 100,
                     totalTrades: todayTotalTrades,
                     winRate: Math.round(todayWinRate * 100) / 100,
-                    sessionDuration: `${Math.floor(sessionDuration / 60)}h ${sessionDuration % 60}m`
+                    portfolioValue: Math.round(totalPortfolioValue * 100) / 100
                 },
                 risk: {
                     status: riskStatus,
@@ -180,6 +248,11 @@ export async function GET(request: NextRequest) {
                 summary: {
                     totalTrades: recentTradesForDrawdown.length,
                     totalPnL: recentTradesForDrawdown.reduce((sum, trade) => sum + Number(trade.pnl), 0)
+                },
+                charts: {
+                    pnlData,
+                    tradeDistribution,
+                    weeklyPerformance
                 }
             }
         })

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -9,19 +9,19 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { useUserSync } from '@/hooks/useUserSync'
 import { 
-  MessageSquare, 
   Send, 
   Bot, 
   User, 
   Loader2, 
-  Sparkles, 
-  TrendingUp, 
+  Paperclip,
+  Sparkles,
+  TrendingUp,
   AlertTriangle,
-  Brain,
-  Zap,
   BarChart3,
   Target,
-  Clock
+  Clock,
+  Brain,
+  Zap
 } from 'lucide-react'
 
 interface ChatMessage {
@@ -37,8 +37,8 @@ interface ChatMessage {
   }
 }
 
-interface SuggestedQuestion {
-  question: string
+interface SuggestedPrompt {
+  text: string
   category: 'analysis' | 'performance' | 'risk' | 'psychology'
   icon: React.ReactNode
 }
@@ -115,34 +115,34 @@ What would you like to know about your trading?`,
     }
   }, [messages])
 
-  const suggestedQuestions: SuggestedQuestion[] = [
+  const suggestedPrompts: SuggestedPrompt[] = [
     {
-      question: "How is my trading performance this month?",
+      text: "How is my trading performance this month?",
       category: "performance",
       icon: <TrendingUp className="h-4 w-4" />
     },
     {
-      question: "What are my biggest risk factors?",
+      text: "What are my biggest risk factors?",
       category: "risk",
       icon: <AlertTriangle className="h-4 w-4" />
     },
     {
-      question: "Which symbols am I most successful with?",
+      text: "Which symbols am I most successful with?",
       category: "analysis",
       icon: <BarChart3 className="h-4 w-4" />
     },
     {
-      question: "How can I improve my trading psychology?",
+      text: "How can I improve my trading psychology?",
       category: "psychology",
       icon: <Brain className="h-4 w-4" />
     },
     {
-      question: "What's my win rate and average P&L?",
+      text: "What's my win rate and average P&L?",
       category: "performance",
       icon: <Target className="h-4 w-4" />
     },
     {
-      question: "When am I most active in trading?",
+      text: "When am I most active in trading?",
       category: "analysis",
       icon: <Clock className="h-4 w-4" />
     }
@@ -232,8 +232,8 @@ What would you like to know about your trading?`,
     }
   }
 
-  const handleSuggestedQuestion = (question: string) => {
-    setInputMessage(question)
+  const handleSuggestedPrompt = (prompt: string) => {
+    setInputMessage(prompt)
     inputRef.current?.focus()
   }
 
@@ -244,215 +244,160 @@ What would you like to know about your trading?`,
     }
   }
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'performance': return 'bg-success/20 text-success border-success/30'
-      case 'risk': return 'bg-warning/20 text-warning border-warning/30'
-      case 'analysis': return 'bg-primary/20 text-primary border-primary/30'
-      case 'psychology': return 'bg-accent/20 text-accent border-accent/30'
-      default: return 'bg-muted text-muted-foreground border-border'
-    }
-  }
-
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
+    <div className="flex flex-col h-full bg-background">
+      {/* Minimal Header */}
+      <div className="flex items-center justify-between p-6 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 sm:p-3 bg-primary/10 rounded-xl">
-            <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Bot className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">AI Chat</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Chat with Guardian AI about your trading performance</p>
+            <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
+            <p className="text-sm text-muted-foreground">Your personal trading intelligence companion</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Chat Interface */}
-        <div className="lg:col-span-3">
-          <Card className="glass-card hover-lift h-[600px] sm:h-[700px] flex flex-col">
-            <CardHeader className="p-4 sm:p-6 border-b">
-              <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base sm:text-lg">Guardian AI Assistant</CardTitle>
-              </div>
-              <CardDescription className="text-sm">Ask me anything about your trading performance</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="p-0 flex-1 flex flex-col">
-              {/* Messages Area */}
-              <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollAreaRef}>
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex gap-3 ${
-                        message.role === 'user' ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
-                      {message.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
-                      
-                      <div
-                        className={`max-w-[80%] p-3 sm:p-4 rounded-lg ${
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground ml-auto'
-                            : 'bg-muted border'
-                        }`}
-                      >
-                        <div className="text-sm sm:text-base whitespace-pre-wrap">
-                          {message.content}
-                        </div>
-                        
-                        {message.metadata?.insights && (
-                          <div className="mt-3 pt-3 border-t border-border/20">
-                            <div className="flex flex-wrap gap-2">
-                              {message.metadata.insights.map((insight, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs bg-primary/10 text-primary border-primary/20"
-                                >
-                                  {insight}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className={`text-xs mt-2 ${
-                          message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                      
-                      {message.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+      {/* Chat Messages Area */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full p-6" ref={scrollAreaRef}>
+          <div className="space-y-6 max-w-4xl mx-auto">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-4 ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
+                {message.role === 'assistant' && (
+                  <div className="flex-shrink-0 w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+                
+                <div
+                  className={`max-w-[80%] p-4 rounded-2xl ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card border border-border'
+                  }`}
+                >
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </div>
                   
-                  {isTyping && (
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="bg-muted border rounded-lg p-3 sm:p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                          <span className="text-sm text-muted-foreground">Guardian AI is thinking...</span>
-                        </div>
+                  {message.metadata?.insights && (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <div className="flex flex-wrap gap-2">
+                        {message.metadata.insights.map((insight, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs bg-primary/10 text-primary border-primary/20"
+                          >
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            {insight}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   )}
+                  
+                  <div className={`text-xs mt-2 ${
+                    message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                  }`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-              </ScrollArea>
-              
-              {/* Input Area */}
-              <div className="p-4 sm:p-6 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    ref={inputRef}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask about your trading performance..."
-                    className="flex-1"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    size="sm"
-                    className="px-4"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
+                
+                {message.role === 'user' && (
+                  <div className="flex-shrink-0 w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-muted-foreground" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Suggested Questions Sidebar */}
-        <div className="space-y-4 sm:space-y-6">
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <CardTitle className="text-base sm:text-lg">Suggested Questions</CardTitle>
-              </div>
-              <CardDescription className="text-sm">Quick questions to get started</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="space-y-3">
-                {suggestedQuestions.map((question, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSuggestedQuestion(question.question)}
-                    className="w-full justify-start h-auto p-3 text-left"
-                    disabled={isLoading}
-                  >
-                    <div className="flex items-start gap-2">
-                      <div className="flex-shrink-0 mt-0.5">
-                        {question.icon}
-                      </div>
-                      <span className="text-xs leading-relaxed">{question.question}</span>
+                <div className="bg-card border border-border rounded-2xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
-                  </Button>
-                ))}
+                    <span className="text-sm text-muted-foreground">Guardian AI is thinking...</span>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
-          {/* AI Capabilities */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base sm:text-lg">AI Capabilities</CardTitle>
-              </div>
-              <CardDescription className="text-sm">What Guardian AI can help you with</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-success" />
-                  <span>Performance Analysis</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-accent" />
-                  <span>Risk Assessment</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-warning" />
-                  <span>Trading Patterns</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-primary" />
-                  <span>Behavioral Insights</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Chat Input Area */}
+      <div className="p-6 border-t border-border/50 bg-background">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* Input Field */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 w-10 p-0 border-border/50"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Input
+              ref={inputRef}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything..."
+              className="flex-1 border-border/50 focus:border-primary focus:ring-primary/20 rounded-xl"
+              disabled={isLoading}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isLoading}
+              size="sm"
+              className="h-10 w-10 p-0 bg-primary hover:bg-primary/90"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Suggested Prompts */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium">Suggested prompts:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedPrompts.map((prompt, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSuggestedPrompt(prompt.text)}
+                  className="h-8 px-3 text-xs border-border/50 hover:border-primary/50 hover:bg-primary/5 rounded-lg transition-colors"
+                  disabled={isLoading}
+                >
+                  <div className="flex items-center gap-2">
+                    {prompt.icon}
+                    <span>{prompt.text}</span>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

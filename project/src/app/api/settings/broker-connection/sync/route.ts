@@ -107,9 +107,15 @@ export async function POST(request: NextRequest) {
 
                     // Process trades for matching and open positions
                     await processTradesForMatching(user.id, rawTrades)
-                    
+
                     // Create or update daily trades summary
                     await createOrUpdateDailyTrades(user.id, connectionId, todayTrades)
+
+                    // Recalculate all open positions and matched trades to ensure accuracy
+                    await recalculateAllPositionsAndMatches(user.id)
+
+                    // Generate comprehensive trading summary
+                    await generateTradingSummary(user.id)
                 }
 
                 // Update connection status and last sync time
@@ -187,7 +193,7 @@ async function processTradesForMatching(userId: string, rawTrades: any[]) {
 
             // Match buy and sell trades
             await matchTrades(userId, symbol, buyTrades, sellTrades)
-            
+
             // Update open positions
             await updateOpenPositions(userId, symbol, buyTrades, sellTrades)
         }
@@ -197,19 +203,42 @@ async function processTradesForMatching(userId: string, rawTrades: any[]) {
 }
 
 /**
- * Match buy and sell trades
+ * Match buy and sell trades using ALL trades for a symbol
  */
 async function matchTrades(userId: string, symbol: string, buyTrades: any[], sellTrades: any[]) {
     try {
+        // Get ALL raw trades for this symbol from the database for proper matching
+        const allRawTrades = await prisma.rawTrade.findMany({
+            where: {
+                userId,
+                symbol
+            },
+            orderBy: {
+                tradeDatetime: 'asc'
+            }
+        })
+
+        // Separate all trades by type
+        const allBuyTrades = allRawTrades.filter(trade => trade.tradeType === 'BUY')
+        const allSellTrades = allRawTrades.filter(trade => trade.tradeType === 'SELL')
+
+        // Clear existing matched trades for this symbol to recalculate
+        await prisma.matchedTrade.deleteMany({
+            where: {
+                userId,
+                symbol
+            }
+        })
+
         let buyIndex = 0
         let sellIndex = 0
 
-        while (buyIndex < buyTrades.length && sellIndex < sellTrades.length) {
-            const buyTrade = buyTrades[buyIndex]
-            const sellTrade = sellTrades[sellIndex]
+        while (buyIndex < allBuyTrades.length && sellIndex < allSellTrades.length) {
+            const buyTrade = allBuyTrades[buyIndex]
+            const sellTrade = allSellTrades[sellIndex]
 
-            const buyQuantity = buyTrade.quantity
-            const sellQuantity = sellTrade.quantity
+            const buyQuantity = Number(buyTrade.quantity)
+            const sellQuantity = Number(sellTrade.quantity)
             const matchQuantity = Math.min(buyQuantity, sellQuantity)
 
             if (matchQuantity > 0) {
@@ -223,10 +252,10 @@ async function matchTrades(userId: string, symbol: string, buyTrades: any[], sel
                         buyTime: buyTrade.tradeDatetime.toTimeString().split(' ')[0],
                         sellTime: sellTrade.tradeDatetime.toTimeString().split(' ')[0],
                         quantity: matchQuantity,
-                        buyPrice: buyTrade.price,
-                        sellPrice: sellTrade.price,
-                        pnl: (sellTrade.price - buyTrade.price) * matchQuantity,
-                        pnlPct: ((sellTrade.price - buyTrade.price) / buyTrade.price) * 100,
+                        buyPrice: Number(buyTrade.price),
+                        sellPrice: Number(sellTrade.price),
+                        pnl: (Number(sellTrade.price) - Number(buyTrade.price)) * matchQuantity,
+                        pnlPct: ((Number(sellTrade.price) - Number(buyTrade.price)) / Number(buyTrade.price)) * 100,
                         commission: 0,
                         buyTradeId: buyTrade.id,
                         sellTradeId: sellTrade.id,
@@ -234,29 +263,50 @@ async function matchTrades(userId: string, symbol: string, buyTrades: any[], sel
                     }
                 })
 
-                // Update remaining quantities
-                buyTrade.quantity -= matchQuantity
-                sellTrade.quantity -= matchQuantity
+                // Update remaining quantities for next iteration
+                const remainingBuyQuantity = buyQuantity - matchQuantity
+                const remainingSellQuantity = sellQuantity - matchQuantity
 
-                if (buyTrade.quantity === 0) buyIndex++
-                if (sellTrade.quantity === 0) sellIndex++
+                if (remainingBuyQuantity === 0) buyIndex++
+                if (remainingSellQuantity === 0) sellIndex++
             }
         }
+
+        console.log(`Processed ${allBuyTrades.length} buy trades and ${allSellTrades.length} sell trades for ${symbol}`)
     } catch (error) {
         console.error('Error matching trades:', error)
     }
 }
 
 /**
- * Update open positions
+ * Update open positions by aggregating ALL trades for a symbol
  */
 async function updateOpenPositions(userId: string, symbol: string, buyTrades: any[], sellTrades: any[]) {
     try {
-        const totalBuyQuantity = buyTrades.reduce((sum, trade) => sum + trade.quantity, 0)
-        const totalSellQuantity = sellTrades.reduce((sum, trade) => sum + trade.quantity, 0)
+        // Get ALL raw trades for this symbol from the database (not just current sync)
+        const allRawTrades = await prisma.rawTrade.findMany({
+            where: {
+                userId,
+                symbol
+            },
+            orderBy: {
+                tradeDatetime: 'asc'
+            }
+        })
+
+        // Separate all trades by type
+        const allBuyTrades = allRawTrades.filter(trade => trade.tradeType === 'BUY')
+        const allSellTrades = allRawTrades.filter(trade => trade.tradeType === 'SELL')
+
+        // Calculate total quantities and values from ALL trades
+        const totalBuyQuantity = allBuyTrades.reduce((sum, trade) => sum + Number(trade.quantity), 0)
+        const totalSellQuantity = allSellTrades.reduce((sum, trade) => sum + Number(trade.quantity), 0)
         const netQuantity = totalBuyQuantity - totalSellQuantity
 
         if (netQuantity !== 0) {
+            // Calculate weighted average price from ALL buy trades
+            const weightedAveragePrice = calculateWeightedAveragePrice(allBuyTrades)
+
             // Create or update open trade
             await prisma.openTrade.upsert({
                 where: {
@@ -268,7 +318,9 @@ async function updateOpenPositions(userId: string, symbol: string, buyTrades: an
                 },
                 update: {
                     quantity: Math.abs(netQuantity),
-                    averagePrice: calculateAveragePrice(buyTrades),
+                    averagePrice: weightedAveragePrice,
+                    price: weightedAveragePrice, // Update the price field as well
+                    remainingQuantity: Math.abs(netQuantity),
                     lastUpdated: new Date()
                 },
                 create: {
@@ -277,14 +329,25 @@ async function updateOpenPositions(userId: string, symbol: string, buyTrades: an
                     tradeType: netQuantity > 0 ? 'BUY' : 'SELL',
                     date: new Date(),
                     time: new Date().toTimeString().split(' ')[0],
-                    price: calculateAveragePrice(buyTrades),
+                    price: weightedAveragePrice,
                     quantity: Math.abs(netQuantity),
                     commission: 0,
                     remainingQuantity: Math.abs(netQuantity),
-                    averagePrice: calculateAveragePrice(buyTrades),
+                    averagePrice: weightedAveragePrice,
                     lastUpdated: new Date()
                 }
             })
+
+            console.log(`Updated open position for ${symbol}: ${netQuantity} units @ ₹${weightedAveragePrice.toFixed(2)}`)
+        } else {
+            // If net quantity is 0, remove any existing open position
+            await prisma.openTrade.deleteMany({
+                where: {
+                    userId,
+                    symbol
+                }
+            })
+            console.log(`Removed open position for ${symbol} (net quantity = 0)`)
         }
     } catch (error) {
         console.error('Error updating open positions:', error)
@@ -292,15 +355,88 @@ async function updateOpenPositions(userId: string, symbol: string, buyTrades: an
 }
 
 /**
- * Calculate average price for trades
+ * Calculate weighted average price for trades
+ */
+function calculateWeightedAveragePrice(trades: any[]): number {
+    if (trades.length === 0) return 0
+
+    const totalValue = trades.reduce((sum, trade) => sum + (trade.price * Number(trade.quantity)), 0)
+    const totalQuantity = trades.reduce((sum, trade) => sum + Number(trade.quantity), 0)
+
+    return totalQuantity > 0 ? totalValue / totalQuantity : 0
+}
+
+/**
+ * Generate comprehensive trading summary for user
+ */
+async function generateTradingSummary(userId: string) {
+    try {
+        console.log(`Generating trading summary for user ${userId} after sync`)
+
+        // Import the trading summary service
+        const { TradingSummaryService } = await import('@/lib/services/trading-summary-service')
+
+        // Generate summary with default options
+        const summaryData = await TradingSummaryService.generateSummary({
+            userId,
+            includeOpenPositions: true,
+            includeBehavioralAnalysis: true
+        })
+
+        // Save to database
+        await TradingSummaryService.saveSummary(userId, summaryData, { version: 1 })
+
+        console.log(`Successfully generated and saved trading summary for user ${userId}`)
+
+    } catch (error) {
+        console.error('Error generating trading summary:', error)
+        // Don't throw error - summary generation failure shouldn't break the sync
+    }
+}
+
+/**
+ * Calculate average price for trades (legacy function for backward compatibility)
  */
 function calculateAveragePrice(trades: any[]): number {
-    if (trades.length === 0) return 0
-    
-    const totalValue = trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
-    const totalQuantity = trades.reduce((sum, trade) => sum + trade.quantity, 0)
-    
-    return totalQuantity > 0 ? totalValue / totalQuantity : 0
+    return calculateWeightedAveragePrice(trades)
+}
+
+/**
+ * Recalculate all open positions and matched trades for a user
+ */
+async function recalculateAllPositionsAndMatches(userId: string) {
+    try {
+        console.log('Recalculating all positions and matches for user:', userId)
+
+        // Get all unique symbols for this user
+        const symbols = await prisma.rawTrade.findMany({
+            where: { userId },
+            select: { symbol: true },
+            distinct: ['symbol']
+        })
+
+        // Process each symbol
+        for (const { symbol } of symbols) {
+            // Get all trades for this symbol
+            const allTrades = await prisma.rawTrade.findMany({
+                where: { userId, symbol },
+                orderBy: { tradeDatetime: 'asc' }
+            })
+
+            const buyTrades = allTrades.filter(trade => trade.tradeType === 'BUY')
+            const sellTrades = allTrades.filter(trade => trade.tradeType === 'SELL')
+
+            // Recalculate matched trades
+            await matchTrades(userId, symbol, buyTrades, sellTrades)
+
+            // Recalculate open positions
+            await updateOpenPositions(userId, symbol, buyTrades, sellTrades)
+        }
+
+        console.log('Successfully recalculated all positions and matches')
+    } catch (error) {
+        console.error('Error recalculating positions and matches:', error)
+    }
 }
 
 /**

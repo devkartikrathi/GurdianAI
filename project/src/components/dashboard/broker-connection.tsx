@@ -26,9 +26,10 @@ import {
   Shield,
   Loader2,
   ExternalLink,
-  Info
+  Info,
+  Settings
 } from 'lucide-react'
-import DailyTradesSummary from './daily-trades-summary'
+
 
 interface BrokerConnection {
   id: string
@@ -51,6 +52,7 @@ export default function BrokerConnectionComponent() {
   const [brokerConnections, setBrokerConnections] = useState<BrokerConnection[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({})
+  const [editingBroker, setEditingBroker] = useState<BrokerConnection | null>(null)
   const [newBroker, setNewBroker] = useState({
     brokerName: 'zerodha',
     apiKey: '',
@@ -63,14 +65,10 @@ export default function BrokerConnectionComponent() {
   const [showOAuthInstructions, setShowOAuthInstructions] = useState<string | null>(null)
   const { toast } = useToast()
 
-
-
   // Load broker connections
   useEffect(() => {
     loadBrokerConnections()
   }, [])
-
-
 
   // Check for pending connections and show OAuth instructions if needed
   useEffect(() => {
@@ -115,7 +113,23 @@ export default function BrokerConnectionComponent() {
     }
   }
 
-    const handleSaveBroker = async () => {
+  const handleEditBroker = (broker: BrokerConnection) => {
+    setEditingBroker(broker)
+    setNewBroker({
+      brokerName: broker.brokerName,
+      apiKey: broker.apiKey,
+      apiSecret: broker.apiSecret
+    })
+    setShowAddForm(true)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingBroker(null)
+    setNewBroker({ brokerName: 'zerodha', apiKey: '', apiSecret: '' })
+    setShowAddForm(false)
+  }
+
+  const handleSaveBroker = async () => {
     if (!newBroker.apiKey || !newBroker.apiSecret) {
       toast({
         title: "Error",
@@ -128,8 +142,13 @@ export default function BrokerConnectionComponent() {
     setIsSaving(true)
     
     try {
-      const response = await fetch('/api/settings/broker-connection', {
-        method: 'POST',
+      const method = editingBroker ? 'PUT' : 'POST'
+      const url = editingBroker 
+        ? `/api/settings/broker-connection/${editingBroker.id}`
+        : '/api/settings/broker-connection'
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -146,7 +165,7 @@ export default function BrokerConnectionComponent() {
           // For Zerodha, automatically redirect to login URL
           if (result.data.loginUrl) {
             toast({
-              title: "Connection Created",
+              title: editingBroker ? "Connection Updated" : "Connection Created",
               description: "Redirecting to Zerodha login page...",
             })
             
@@ -159,18 +178,19 @@ export default function BrokerConnectionComponent() {
             }
           } else {
             toast({
-              title: "Connection Created",
+              title: editingBroker ? "Connection Updated" : "Connection Created",
               description: "Please complete OAuth authentication manually",
             })
           }
         } else {
           toast({
-            title: "Success",
+            title: editingBroker ? "Connection Updated" : "Connection Created",
             description: "Broker connection saved successfully!",
           })
         }
         
         setNewBroker({ brokerName: 'zerodha', apiKey: '', apiSecret: '' })
+        setEditingBroker(null)
         setShowAddForm(false)
         await loadBrokerConnections()
       } else {
@@ -192,8 +212,6 @@ export default function BrokerConnectionComponent() {
       setIsSaving(false)
     }
   }
-
-
 
   const handleTestConnection = async (connection: BrokerConnection) => {
     setIsTesting(connection.id)
@@ -286,47 +304,51 @@ export default function BrokerConnectionComponent() {
     }
   }
 
-  const handleReauthenticate = async (connection: BrokerConnection) => {
-    if (!confirm('Are you sure you want to re-authenticate this Zerodha connection? This will log you out and require a new OAuth flow.')) {
-      return
-    }
-
+  const handleReauthenticate = async (broker: BrokerConnection) => {
     try {
-      const response = await fetch('/api/settings/broker-connection/reauth', {
-        method: 'POST',
+      setIsSaving(true)
+      
+      // Use existing credentials to generate new login URL
+      const response = await fetch(`/api/settings/broker-connection/${broker.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          connectionId: connection.id
+          brokerName: broker.brokerName,
+          apiKey: broker.apiKey,
+          apiSecret: broker.apiSecret
         }),
       })
 
-             if (response.ok) {
-         const result = await response.json()
-         
-         // Clear the access token and show OAuth instructions
-         setShowOAuthInstructions(connection.id)
-         
-         toast({
-           title: "Re-authentication Initiated",
-           description: "Please complete the OAuth flow by pasting your new request token",
-         })
-       } else {
-        const error = await response.json()
-        toast({
-          title: "Error",
-          description: error.error || "Failed to initiate re-authentication",
-          variant: "destructive",
-        })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate re-authentication URL')
       }
+
+      if (result.loginUrl) {
+        // Open Zerodha login in new tab
+        window.open(result.loginUrl, '_blank')
+        
+        toast({
+          title: "Re-authentication Started",
+          description: "Complete the login in the new tab. This page will auto-refresh when done.",
+        })
+
+        // Start auto-refresh to detect when authentication is complete
+        setShowOAuthInstructions(broker.id)
+      }
+
     } catch (error) {
-      console.error('Error initiating re-authentication:', error)
+      console.error('Re-authentication error:', error)
       toast({
-        title: "Error",
-        description: "Failed to initiate re-authentication",
+        title: "Re-authentication Failed",
+        description: error instanceof Error ? error.message : 'Failed to start re-authentication',
         variant: "destructive",
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -455,16 +477,28 @@ export default function BrokerConnectionComponent() {
                    )}
                  </Button>
                 
-                {broker.connectionStatus === 'expired' && (
+                {(broker.connectionStatus === 'expired' || broker.connectionStatus === 'pending') && (
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => handleReauthenticate(broker)}
-                    className="h-8"
+                    className="h-8 bg-primary hover:bg-primary/90"
+                    title="Re-authenticate with Zerodha"
                   >
-                    <Key className="h-4 w-4" />
+                    <Key className="h-4 w-4 mr-1" />
+                    Re-authenticate
                   </Button>
                 )}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditBroker(broker)}
+                  className="h-8"
+                  title="Edit connection details"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
                 
                 <Button
                   variant="outline"
@@ -570,15 +604,7 @@ export default function BrokerConnectionComponent() {
                      </div>
                    </div>
                    
-                   {/* Detailed Daily Trades Summary Component */}
-                   {broker.lastSyncAt && (
-                     <div className="mt-4">
-                       <DailyTradesSummary 
-                         brokerConnectionId={broker.id}
-                         userId={broker.userId}
-                       />
-                     </div>
-                   )}
+                   
                 </div>
               )}
 
@@ -593,7 +619,9 @@ export default function BrokerConnectionComponent() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Key className="h-4 w-4 text-primary" />
-              <h4 className="font-medium text-foreground">Add New Broker Connection</h4>
+              <h4 className="font-medium text-foreground">
+                {editingBroker ? "Update Broker Connection" : "Add New Broker Connection"}
+              </h4>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -647,12 +675,12 @@ export default function BrokerConnectionComponent() {
                 ) : (
                   <Shield className="h-4 w-4 mr-2" />
                 )}
-                Save Connection
+                {editingBroker ? "Update & Re-authenticate" : "Save Connection"}
               </Button>
               
               <Button
                 variant="outline"
-                onClick={() => setShowAddForm(false)}
+                onClick={editingBroker ? handleCancelEdit : () => setShowAddForm(false)}
                 disabled={isSaving}
               >
                 Cancel
@@ -752,16 +780,7 @@ export default function BrokerConnectionComponent() {
         </Card>
       )}
 
-      {/* Add Broker Button */}
-      {!showAddForm && brokerConnections.length > 0 && (
-        <Button
-          onClick={() => setShowAddForm(true)}
-          className="w-full bg-primary hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Another Broker Connection
-        </Button>
-      )}
+
     </div>
   )
 }
