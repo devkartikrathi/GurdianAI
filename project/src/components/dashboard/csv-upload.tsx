@@ -41,21 +41,46 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
   });
 
   const detectSchema = async (file: File) => {
+    console.log('🚀 detectSchema called with file:', file.name, file.size, file.type);
     setIsDetecting(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
+
+      console.log('📤 Sending file to schema detection API...');
+      console.log('📤 FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
 
       const response = await fetch('/api/trades/schema-detect', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('📥 Schema detection response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to detect schema');
+        const errorText = await response.text();
+        console.error('❌ Schema detection failed:', errorText);
+        throw new Error(`Failed to detect schema: ${response.status} ${errorText}`);
       }
 
-      const { schema } = await response.json();
+      const responseData = await response.json();
+      console.log('📥 Schema detection response data:', responseData);
+      
+      const { schema } = responseData;
+      
+      if (!schema) {
+        throw new Error('No schema returned from API');
+      }
+
+      console.log('✅ Schema received:', schema);
+      console.log('✅ Columns count:', schema.columns?.length);
+      console.log('✅ Confidence score:', schema.confidence_score);
+      console.log('✅ Suggested mapping:', schema.suggested_mapping);
+
       setSchema(schema);
       setColumnMapping(schema.suggested_mapping);
       setStep('mapping');
@@ -74,8 +99,8 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
         });
       }
     } catch (error) {
-      console.error('Schema detection error:', error);
-      toast.error('Failed to detect CSV schema');
+      console.error('❌ Schema detection error:', error);
+      toast.error('Failed to detect CSV schema: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsDetecting(false);
     }
@@ -141,6 +166,9 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
     { key: 'price', label: 'Price', required: true },
     { key: 'amount', label: 'Amount/Value', required: false },
     { key: 'trade_datetime', label: 'Date/Time', required: true },
+    { key: 'trade_time', label: 'Trade Time (Optional)', required: false },
+    // Additional optional fields for simplified Paytm CSV
+    { key: 'brokerage', label: 'Brokerage', required: false },
   ];
 
   if (step === 'select') {
@@ -224,6 +252,23 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
               <span className="text-gray-600">Columns Found: {schema.columns.length}</span>
             </div>
           </div>
+          
+          {/* Paytm CSV Compatibility Message */}
+          {schema.columns.some(col => 
+            ['Script', 'Type', 'Quantity', 'Price', 'Date', 'Trade Time', 'Brokerage'].includes(col.name)
+          ) && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Paytm CSV Detected!</span>
+              </div>
+              <p className="text-xs text-green-700 mt-1">
+                We've detected a Paytm tradebook format with {schema.columns.length} columns. 
+                The AI should automatically map all columns correctly.
+                Please verify the mapping below and adjust if needed.
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,6 +333,24 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* All Detected Columns */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium mb-3 text-blue-800">All Detected Columns ({schema.columns.length})</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {schema.columns.map((col) => (
+                <div key={col.name} className="p-3 bg-white rounded border">
+                  <div className="font-medium text-sm text-gray-800">{col.name}</div>
+                  <div className="text-xs text-gray-500 capitalize">{col.type}</div>
+                  {col.sample_values.length > 0 && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Sample: {col.sample_values[0]}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
