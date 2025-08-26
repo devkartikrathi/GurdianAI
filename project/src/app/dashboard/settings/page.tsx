@@ -429,18 +429,20 @@ export default function SettingsPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-8 sm:space-y-12 p-6 bg-gradient-to-br from-slate-50/50 to-gray-50/50 dark:from-slate-900/50 dark:to-gray-900/50 min-h-screen">
           {/* User Profile Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-800/30 dark:to-indigo-800/30 border-b border-blue-200/40 dark:border-blue-600/40">
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base sm:text-lg">User Profile</CardTitle>
+                <div className="p-2 bg-blue-500/20 dark:bg-blue-400/20 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-blue-900 dark:text-blue-100">User Profile</CardTitle>
                 {userLoading && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
                 )}
               </div>
-              <CardDescription className="text-sm">Your basic account information</CardDescription>
+              <CardDescription className="text-sm text-blue-700 dark:text-blue-300">Your basic account information</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               {/* Profile Picture Display */}
@@ -532,16 +534,18 @@ export default function SettingsPage() {
           </Card>
 
           {/* Risk Profile Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-orange-100/30 to-amber-100/30 dark:from-orange-800/30 dark:to-amber-800/30 border-b border-orange-200/40 dark:border-orange-600/40">
               <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-warning" />
-                <CardTitle className="text-base sm:text-lg">Risk Profile</CardTitle>
+                <div className="p-2 bg-orange-500/20 dark:bg-orange-400/20 rounded-lg">
+                  <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-orange-900 dark:text-orange-100">Risk Profile</CardTitle>
                 {isLoadingRisk && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-4 w-4 animate-spin text-orange-600 dark:text-orange-400" />
                 )}
               </div>
-              <CardDescription className="text-sm">Configure your risk management parameters</CardDescription>
+              <CardDescription className="text-sm text-orange-700 dark:text-orange-300">Configure your risk management parameters</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -618,16 +622,18 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Preferences Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30 border-b border-purple-200/40 dark:border-purple-600/40">
               <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-accent" />
-                <CardTitle className="text-base sm:text-lg">Notification Preferences</CardTitle>
+                <div className="p-2 bg-purple-500/20 dark:bg-purple-400/20 rounded-lg">
+                  <Bell className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-purple-900 dark:text-purple-100">Notification Preferences</CardTitle>
                 {isLoadingNotifications && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400" />
                 )}
               </div>
-              <CardDescription className="text-sm">Choose what notifications you want to receive</CardDescription>
+              <CardDescription className="text-sm text-purple-700 dark:text-purple-300">Choose what notifications you want to receive</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -721,16 +727,18 @@ export default function SettingsPage() {
           <BrokerConnectionComponent />
 
           {/* Data Management Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200/40 dark:border-green-600/40">
               <div className="flex items-center gap-2">
-                <Gauge className="h-5 w-5 text-warning" />
-                <CardTitle className="text-base sm:text-lg">Data Management</CardTitle>
+                <div className="p-2 bg-green-500/20 dark:bg-green-400/20 rounded-lg">
+                  <Gauge className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-green-900 dark:text-green-100">Data Management</CardTitle>
                 {(isExportingData || isDeletingData) && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-4 w-4 animate-spin text-green-600 dark:text-green-400" />
                 )}
               </div>
-              <CardDescription className="text-sm">Manage your trading data and exports</CardDescription>
+              <CardDescription className="text-sm text-green-700 dark:text-green-300">Manage your trading data and exports</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

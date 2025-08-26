@@ -265,16 +265,16 @@ Please try again in a moment, or ask a different question.`,
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-gradient-to-br from-slate-50/50 to-gray-50/50 dark:from-slate-900/50 dark:to-gray-900/50">
       {/* Minimal Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border/50">
+      <div className="flex items-center justify-between p-6 border-b border-border/50 bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Bot className="h-5 w-5 text-primary" />
+          <div className="p-2 bg-purple-500/20 dark:bg-purple-400/20 rounded-lg">
+            <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl font-semibold text-purple-900 dark:text-purple-100">AI Chat</h1>
+            <p className="text-sm text-purple-700 dark:text-purple-300">
               Your personal trading intelligence companion
             </p>
           </div>
@@ -388,16 +388,16 @@ Please try again in a moment, or ask a different question.`,
       </div>
 
       {/* Chat Input Area */}
-      <div className="p-6 border-t border-border/50 bg-background">
+      <div className="p-6 border-t border-border/50 bg-gradient-to-r from-indigo-100/30 to-blue-100/30 dark:from-indigo-800/30 dark:to-blue-800/30">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Input Field */}
           <div className="flex gap-3">
             <Button
               variant="outline"
               size="sm"
-              className="h-10 w-10 p-0 border-border/50"
+              className="h-10 w-10 p-0 border-indigo-300/50 dark:border-indigo-600/50 hover:border-indigo-400/50 dark:hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/50"
             >
-              <Paperclip className="h-4 w-4" />
+              <Paperclip className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </Button>
             <Input
               ref={inputRef}
@@ -405,14 +405,14 @@ Please try again in a moment, or ask a different question.`,
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about your trading..."
-              className="flex-1 border-border/50 focus:border-primary focus:ring-primary/20 rounded-xl"
+              className="flex-1 border-indigo-300/50 dark:border-indigo-600/50 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20 rounded-xl bg-white/80 dark:bg-gray-800/80"
               disabled={isLoading}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
               size="sm"
-              className="h-10 w-10 p-0 bg-primary hover:bg-primary/90"
+              className="h-10 w-10 p-0 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -424,13 +424,13 @@ Please try again in a moment, or ask a different question.`,
 
           {/* Quick Prompts Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground font-medium">Quick prompts:</span>
+            <span className="text-xs text-indigo-700 dark:text-indigo-300 font-medium">Quick prompts:</span>
             <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 px-3 text-xs border-border/50 hover:border-border hover:bg-muted/50"
+                  className="h-8 px-3 text-xs border-indigo-300/50 dark:border-indigo-600/50 hover:border-indigo-400/50 dark:hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300"
                 >
                   <Menu className="h-3 w-3 mr-2" />
                   Select a prompt
@@ -439,17 +439,17 @@ Please try again in a moment, or ask a different question.`,
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="start" 
-                className="w-80 max-h-96 overflow-y-auto"
+                className="w-80 max-h-96 overflow-y-auto bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-800/95 dark:to-gray-900/95 border border-indigo-200/50 dark:border-indigo-700/50 shadow-xl"
                 side="top"
               >
-                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                <DropdownMenuLabel className="text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-gradient-to-r from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/50 dark:to-blue-900/50 p-3">
                   Choose a quick prompt to get started
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-indigo-200/50 dark:bg-indigo-600/50" />
                 
                 {/* Performance Category */}
                 <div className="px-2 py-1">
-                  <div className="text-xs font-medium text-blue-600 mb-2 flex items-center gap-2">
+                  <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/50 dark:to-indigo-900/50 p-2 rounded-md">
                     <TrendingUp className="h-3 w-3" />
                     Performance Analysis
                   </div>
@@ -462,13 +462,13 @@ Please try again in a moment, or ask a different question.`,
                           handleSuggestedPrompt(prompt.text)
                           setIsDropdownOpen(false)
                         }}
-                        className="text-xs p-2 rounded-md hover:bg-blue-50/50 cursor-pointer"
+                        className="text-xs p-2 rounded-md hover:bg-blue-50/50 dark:hover:bg-blue-900/50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3 w-full">
-                          <div className="flex-shrink-0 text-blue-600 mt-0.5">
+                          <div className="flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5">
                             {prompt.icon}
                           </div>
-                          <span className="text-left leading-relaxed">
+                          <span className="text-left leading-relaxed text-gray-700 dark:text-gray-300">
                             {prompt.text}
                           </span>
                         </div>
@@ -480,7 +480,7 @@ Please try again in a moment, or ask a different question.`,
                 
                 {/* Risk Category */}
                 <div className="px-2 py-1">
-                  <div className="text-xs font-medium text-orange-600 mb-2 flex items-center gap-2">
+                  <div className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2 bg-gradient-to-r from-orange-50/50 to-amber-50/50 dark:from-orange-900/50 dark:to-amber-900/50 p-2 rounded-md">
                     <AlertTriangle className="h-3 w-3" />
                     Risk Management
                   </div>
@@ -493,13 +493,13 @@ Please try again in a moment, or ask a different question.`,
                           handleSuggestedPrompt(prompt.text)
                           setIsDropdownOpen(false)
                         }}
-                        className="text-xs p-2 rounded-md hover:bg-orange-50/50 cursor-pointer"
+                        className="text-xs p-2 rounded-md hover:bg-orange-50/50 dark:hover:bg-orange-900/50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3 w-full">
-                          <div className="flex-shrink-0 text-orange-600 mt-0.5">
+                          <div className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5">
                             {prompt.icon}
                           </div>
-                          <span className="text-left leading-relaxed">
+                          <span className="text-left leading-relaxed text-gray-700 dark:text-gray-300">
                             {prompt.text}
                           </span>
                         </div>
@@ -511,7 +511,7 @@ Please try again in a moment, or ask a different question.`,
                 
                 {/* Psychology Category */}
                 <div className="px-2 py-1">
-                  <div className="text-xs font-medium text-purple-600 mb-2 flex items-center gap-2">
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2 bg-gradient-to-r from-purple-50/50 to-pink-50/50 dark:from-purple-900/50 dark:to-pink-900/50 p-2 rounded-md">
                     <Brain className="h-3 w-3" />
                     Trading Psychology
                   </div>
@@ -524,13 +524,13 @@ Please try again in a moment, or ask a different question.`,
                           handleSuggestedPrompt(prompt.text)
                           setIsDropdownOpen(false)
                         }}
-                        className="text-xs p-2 rounded-md hover:bg-purple-50/50 cursor-pointer"
+                        className="text-xs p-2 rounded-md hover:bg-purple-50/50 dark:hover:bg-purple-900/50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3 w-full">
-                          <div className="flex-shrink-0 text-purple-600 mt-0.5">
+                          <div className="flex-shrink-0 text-purple-600 dark:text-purple-400 mt-0.5">
                     {prompt.icon}
                           </div>
-                          <span className="text-left leading-relaxed">
+                          <span className="text-left leading-relaxed text-gray-700 dark:text-gray-300">
                             {prompt.text}
                           </span>
                         </div>
@@ -542,7 +542,7 @@ Please try again in a moment, or ask a different question.`,
                 
                 {/* Analysis Category */}
                 <div className="px-2 py-1">
-                  <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-2">
+                  <div className="text-xs font-medium text-green-600 dark:text-green-400 mb-2 flex items-center gap-2 bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/50 dark:to-emerald-900/50 p-2 rounded-md">
                     <BarChart3 className="h-3 w-3" />
                     Strategy Analysis
                   </div>
@@ -555,13 +555,13 @@ Please try again in a moment, or ask a different question.`,
                           handleSuggestedPrompt(prompt.text)
                           setIsDropdownOpen(false)
                         }}
-                        className="text-xs p-2 rounded-md hover:bg-green-50/50 cursor-pointer"
+                        className="text-xs p-2 rounded-md hover:bg-green-50/50 dark:hover:bg-green-900/50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3 w-full">
-                          <div className="flex-shrink-0 text-green-600 mt-0.5">
+                          <div className="flex-shrink-0 text-green-600 dark:text-green-400 mt-0.5">
                             {prompt.icon}
                           </div>
-                          <span className="text-left leading-relaxed">
+                          <span className="text-left leading-relaxed text-gray-700 dark:text-gray-300">
                             {prompt.text}
                           </span>
                         </div>

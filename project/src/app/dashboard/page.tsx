@@ -187,19 +187,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50/50 to-gray-50/50 dark:from-slate-900/50 dark:to-gray-900/50 min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-border/50">
+            <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                  <div className="p-2 bg-blue-500/20 dark:bg-blue-400/20 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Today's P&L</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Today's P&L</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                       {dashboardData?.today.pnl ? `$${dashboardData.today.pnl.toFixed(2)}` : '--'}
                     </p>
                   </div>
@@ -207,15 +207,15 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/50">
+            <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-success/10 rounded-lg">
-                    <Target className="h-5 w-5 text-success" />
+                  <div className="p-2 bg-green-500/20 dark:bg-green-400/20 rounded-lg">
+                    <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Win Rate</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-green-700 dark:text-green-300">Win Rate</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                       {dashboardData?.today.winRate ? `${dashboardData.today.winRate}%` : '--'}
                     </p>
                   </div>
@@ -223,15 +223,15 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/50">
+            <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-accent/10 rounded-lg">
-                    <Activity className="h-5 w-5 text-accent" />
+                  <div className="p-2 bg-purple-500/20 dark:bg-purple-400/20 rounded-lg">
+                    <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Trades</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-purple-700 dark:text-purple-300">Total Trades</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
                       {dashboardData?.today.totalTrades || '--'}
                     </p>
                   </div>
@@ -239,15 +239,15 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/50">
+            <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-warning/10 rounded-lg">
-                    <Gauge className="h-5 w-5 text-warning" />
+                  <div className="p-2 bg-orange-500/20 dark:bg-orange-400/20 rounded-lg">
+                    <Gauge className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Portfolio Value</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-orange-700 dark:text-orange-300">Portfolio Value</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                       {dashboardData?.today.portfolioValue ? `$${dashboardData.today.portfolioValue.toFixed(2)}` : '--'}
                     </p>
                   </div>
@@ -259,10 +259,10 @@ export default function DashboardPage() {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* P&L Chart */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Today's P&L</CardTitle>
-                <CardDescription>Real-time profit and loss tracking</CardDescription>
+            <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-800/30 dark:to-indigo-800/30 border-b border-blue-200/40 dark:border-blue-600/40">
+                <CardTitle className="text-lg text-blue-900 dark:text-blue-100">Today's P&L</CardTitle>
+                <CardDescription className="text-blue-700 dark:text-blue-300">Real-time profit and loss tracking</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-64">
@@ -313,10 +313,10 @@ export default function DashboardPage() {
             </Card>
 
             {/* Win/Loss Distribution */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Trade Distribution</CardTitle>
-                <CardDescription>Win vs Loss ratio (30 days)</CardDescription>
+            <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200/40 dark:border-green-600/40">
+                <CardTitle className="text-lg text-green-900 dark:text-green-100">Trade Distribution</CardTitle>
+                <CardDescription className="text-green-700 dark:text-green-300">Win vs Loss ratio (30 days)</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-64">
@@ -364,10 +364,10 @@ export default function DashboardPage() {
             </Card>
 
             {/* Weekly Performance */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Weekly Performance</CardTitle>
-                <CardDescription>Trades and P&L by day</CardDescription>
+            <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30 border-b border-purple-200/40 dark:border-purple-600/40">
+                <CardTitle className="text-lg text-purple-900 dark:text-purple-100">Weekly Performance</CardTitle>
+                <CardDescription className="text-purple-700 dark:text-purple-300">Trades and P&L by day</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-64">
@@ -409,15 +409,15 @@ export default function DashboardPage() {
             </Card>
 
             {/* Risk Assessment */}
-            <Card className="border-border/50">
-              <CardHeader>
+            <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-orange-100/30 to-amber-100/30 dark:from-orange-800/30 dark:to-amber-800/30 border-b border-orange-200/40 dark:border-orange-600/40">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-warning/10 rounded-lg">
-                    <Shield className="h-5 w-5 text-warning" />
+                  <div className="p-2 bg-orange-500/20 dark:bg-orange-400/20 rounded-lg">
+                    <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
-                    <CardTitle>Risk Assessment</CardTitle>
-                    <CardDescription>Current trading risk status</CardDescription>
+                    <CardTitle className="text-orange-900 dark:text-orange-100">Risk Assessment</CardTitle>
+                    <CardDescription className="text-orange-700 dark:text-orange-300">Current trading risk status</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -454,15 +454,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activity */}
-          <Card className="border-border/50">
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/50 dark:to-blue-950/50 border-2 border-indigo-200/30 dark:border-indigo-700/30 hover:border-indigo-300/50 dark:hover:border-indigo-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-indigo-100/30 to-blue-100/30 dark:from-indigo-800/30 dark:to-blue-800/30 border-b border-indigo-200/40 dark:border-indigo-600/40">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Activity className="h-5 w-5 text-primary" />
+                <div className="p-2 bg-indigo-500/20 dark:bg-indigo-400/20 rounded-lg">
+                  <Activity className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest trading activities</CardDescription>
+                  <CardTitle className="text-indigo-900 dark:text-indigo-100">Recent Activity</CardTitle>
+                  <CardDescription className="text-indigo-700 dark:text-indigo-300">Latest trading activities</CardDescription>
                 </div>
               </div>
             </CardHeader>

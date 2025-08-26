@@ -321,18 +321,20 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6 bg-gradient-to-br from-slate-50/50 to-gray-50/50 dark:from-slate-900/50 dark:to-gray-900/50 min-h-screen">
       <div className="flex flex-col gap-4 sm:gap-6">
         {/* Main Content */}
         <div className="flex-1 space-y-4 sm:space-y-6">
           {/* File Upload Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Upload className="h-5 w-5" />
+          <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-800/30 dark:to-indigo-800/30 border-b border-blue-200/40 dark:border-blue-600/40">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-blue-900 dark:text-blue-100">
+                <div className="p-1 bg-blue-500/20 dark:bg-blue-400/20 rounded">
+                  <Upload className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 Upload Trade Data
               </CardTitle>
-              <CardDescription className="text-sm">
+              <CardDescription className="text-sm text-blue-700 dark:text-blue-300">
                 Upload your CSV trade files for analysis and matching
               </CardDescription>
             </CardHeader>
@@ -369,13 +371,15 @@ export default function UploadPage() {
 
           {/* Upload Results */}
           {showUploadResult && uploadResult && (
-            <Card className="mb-4 sm:mb-6">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <CheckCircle className="h-5 w-5 text-success" />
+            <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300 mb-4 sm:mb-6">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200/40 dark:border-green-600/40">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-green-900 dark:text-green-100">
+                  <div className="p-1 bg-green-500/20 dark:bg-green-400/20 rounded">
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
                   Upload Results
                 </CardTitle>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-sm text-green-700 dark:text-green-300">
                   Trade matching analysis and statistics
                 </CardDescription>
               </CardHeader>
@@ -432,14 +436,16 @@ export default function UploadPage() {
           )}
 
           {/* Trades Display Section */}
-          <Card className="glass-card hover-lift">
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30 border-b border-purple-200/40 dark:border-purple-600/40">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                  <div className="p-1 bg-purple-500/20 dark:bg-purple-400/20 rounded">
+                    <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
                   <div>
-                    <CardTitle>Uploaded Trades</CardTitle>
-                    <CardDescription>View and manage all your uploaded trade data</CardDescription>
+                    <CardTitle className="text-purple-900 dark:text-purple-100">Uploaded Trades</CardTitle>
+                    <CardDescription className="text-purple-700 dark:text-purple-300">View and manage all your uploaded trade data</CardDescription>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -789,11 +795,13 @@ export default function UploadPage() {
 
         {/* Guidelines Sidebar */}
         <div className="space-y-4 sm:space-y-6">
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-orange-100/30 to-amber-100/30 dark:from-orange-800/30 dark:to-amber-800/30 border-b border-orange-200/40 dark:border-orange-600/40">
               <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-accent" />
-                <CardTitle className="text-base sm:text-lg">Upload Guidelines</CardTitle>
+                <div className="p-1 bg-orange-500/20 dark:bg-orange-400/20 rounded">
+                  <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-orange-900 dark:text-orange-100">Upload Guidelines</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
@@ -825,11 +833,13 @@ export default function UploadPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="bg-gradient-to-br from-cyan-50/50 to-teal-50/50 dark:from-cyan-950/50 dark:to-teal-950/50 border-2 border-cyan-200/30 dark:border-cyan-700/30 hover:border-cyan-300/50 dark:hover:border-cyan-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-cyan-100/30 to-teal-100/30 dark:from-cyan-800/30 dark:to-teal-800/30 border-b border-cyan-200/40 dark:border-cyan-600/40">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-success" />
-                <CardTitle className="text-base sm:text-lg">Supported Formats</CardTitle>
+                <div className="p-1 bg-cyan-500/20 dark:bg-cyan-400/20 rounded">
+                  <Sparkles className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <CardTitle className="text-base sm:text-lg text-cyan-900 dark:text-cyan-100">Supported Formats</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">

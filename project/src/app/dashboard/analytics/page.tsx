@@ -320,7 +320,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6 bg-gradient-to-br from-slate-50/50 to-gray-50/50 dark:from-slate-900/50 dark:to-gray-900/50 min-h-screen">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col gap-4">
@@ -362,16 +362,18 @@ export default function AnalyticsPage() {
 
       {/* Performance Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total P&L</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-800/30 dark:to-indigo-800/30 border-b border-blue-200/40 dark:border-blue-600/40">
+            <CardTitle className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Total P&L</CardTitle>
+            <div className="p-1 bg-blue-500/20 dark:bg-blue-400/20 rounded">
+              <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className={`text-lg sm:text-xl md:text-2xl font-bold ${performanceMetrics.totalPnl >= 0 ? 'text-success' : 'text-danger'}`}>
               ₹{performanceMetrics.totalPnl.toFixed(2)}
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+            <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 mt-1">
               {getPerformanceIcon(performanceMetrics.totalPnl)}
               <span className="hidden sm:inline">
                 {performanceMetrics.totalPnl >= 0 ? 'Profitable' : 'Loss'} overall
@@ -383,46 +385,52 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium">Win Rate</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200/40 dark:border-green-600/40">
+            <CardTitle className="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">Win Rate</CardTitle>
+            <div className="p-1 bg-green-500/20 dark:bg-green-400/20 rounded">
+              <Target className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {performanceMetrics.winRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
               {performanceMetrics.winningTrades} of {performanceMetrics.totalTrades} trades
             </p>
           </CardContent>
         </Card>
 
-        <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium">Max Drawdown</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 bg-gradient-to-r from-orange-100/30 to-amber-100/30 dark:from-orange-800/30 dark:to-amber-800/30 border-b border-orange-200/40 dark:border-orange-600/40">
+            <CardTitle className="text-xs sm:text-sm font-medium text-orange-900 dark:text-orange-100">Max Drawdown</CardTitle>
+            <div className="p-1 bg-orange-500/20 dark:bg-orange-400/20 rounded">
+              <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-warning">
               {performanceMetrics.maxDrawdown.toFixed(2)}%
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
               Peak to trough decline
             </p>
           </CardContent>
         </Card>
 
-        <Card className="glass-card hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium">Sharpe Ratio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30 border-b border-purple-200/40 dark:border-purple-600/40">
+            <CardTitle className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">Sharpe Ratio</CardTitle>
+            <div className="p-1 bg-purple-500/20 dark:bg-purple-400/20 rounded">
+              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {performanceMetrics.sharpeRatio.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
               Risk-adjusted returns
             </p>
           </CardContent>
@@ -443,10 +451,10 @@ export default function AnalyticsPage() {
         <TabsContent value="performance" className="space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Profit/Loss Breakdown */}
-            <Card className="glass-card hover-lift">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Profit/Loss Breakdown</CardTitle>
-                <CardDescription className="text-sm">Detailed P&L analysis</CardDescription>
+            <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200/30 dark:border-blue-700/30 hover:border-blue-300/50 dark:hover:border-blue-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-800/30 dark:to-indigo-800/30 border-b border-blue-200/40 dark:border-blue-600/40">
+                <CardTitle className="text-base sm:text-lg text-blue-900 dark:text-blue-100">Profit/Loss Breakdown</CardTitle>
+                <CardDescription className="text-sm text-blue-700 dark:text-blue-300">Detailed P&L analysis</CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <div className="space-y-3 sm:space-y-4">
@@ -473,10 +481,10 @@ export default function AnalyticsPage() {
             </Card>
 
             {/* Trade Statistics */}
-            <Card className="glass-card hover-lift">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Trade Statistics</CardTitle>
-                <CardDescription className="text-sm">Key trading metrics</CardDescription>
+            <Card className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 border-green-200/30 dark:border-green-700/30 hover:border-green-300/50 dark:hover:border-green-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200/40 dark:border-green-600/40">
+                <CardTitle className="text-base sm:text-lg text-green-900 dark:text-green-100">Trade Statistics</CardTitle>
+                <CardDescription className="text-sm text-green-700 dark:text-green-300">Key trading metrics</CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <div className="space-y-3 sm:space-y-4">
@@ -508,10 +516,10 @@ export default function AnalyticsPage() {
 
         {/* Emotional Zones Tab */}
         <TabsContent value="emotional" className="space-y-4 sm:space-y-6">
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Trading Performance by Time</CardTitle>
-              <CardDescription className="text-sm">Analyze your performance across different time slots</CardDescription>
+          <Card className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200/30 dark:border-purple-700/30 hover:border-purple-300/50 dark:hover:border-purple-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-800/30 dark:to-pink-800/30 border-b border-purple-200/40 dark:border-purple-600/40">
+              <CardTitle className="text-base sm:text-lg text-purple-900 dark:text-purple-100">Trading Performance by Time</CardTitle>
+              <CardDescription className="text-sm text-purple-700 dark:text-purple-300">Analyze your performance across different time slots</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               {emotionalZones.length > 0 ? (
@@ -556,10 +564,10 @@ export default function AnalyticsPage() {
 
         {/* Symbols Tab */}
         <TabsContent value="symbols" className="space-y-4 sm:space-y-6">
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Symbol Performance Analysis</CardTitle>
-              <CardDescription className="text-sm">Performance breakdown by trading symbols</CardDescription>
+          <Card className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/50 dark:to-blue-950/50 border-2 border-indigo-200/30 dark:border-indigo-700/30 hover:border-indigo-300/50 dark:hover:border-indigo-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-indigo-100/30 to-blue-100/30 dark:from-indigo-800/30 dark:to-blue-800/30 border-b border-indigo-200/40 dark:border-indigo-600/40">
+              <CardTitle className="text-base sm:text-lg text-indigo-900 dark:text-indigo-100">Symbol Performance Analysis</CardTitle>
+              <CardDescription className="text-sm text-indigo-700 dark:text-indigo-300">Performance breakdown by trading symbols</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               {symbolAnalysis.length > 0 ? (
@@ -609,10 +617,10 @@ export default function AnalyticsPage() {
         {/* Risk Tab */}
         <TabsContent value="risk" className="space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <Card className="glass-card hover-lift">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Risk Metrics</CardTitle>
-                <CardDescription className="text-sm">Current risk assessment</CardDescription>
+            <Card className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200/30 dark:border-orange-700/30 hover:border-orange-300/50 dark:hover:border-orange-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-orange-100/30 to-amber-100/30 dark:from-orange-800/30 dark:to-amber-800/30 border-b border-orange-200/40 dark:border-orange-600/40">
+                <CardTitle className="text-base sm:text-lg text-orange-900 dark:text-orange-100">Risk Metrics</CardTitle>
+                <CardDescription className="text-sm text-orange-700 dark:text-orange-300">Current risk assessment</CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <div className="space-y-3 sm:space-y-4">
@@ -632,10 +640,10 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card hover-lift">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Risk Management</CardTitle>
-                <CardDescription className="text-sm">Risk per trade settings</CardDescription>
+            <Card className="bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-950/50 dark:to-rose-950/50 border-2 border-red-200/30 dark:border-red-700/30 hover:border-red-300/50 dark:hover:border-red-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-red-100/30 to-rose-100/30 dark:from-red-800/30 dark:to-rose-800/30 border-b border-red-200/40 dark:border-red-600/40">
+                <CardTitle className="text-base sm:text-lg text-red-900 dark:text-red-100">Risk Management</CardTitle>
+                <CardDescription className="text-sm text-red-700 dark:text-red-300">Risk per trade settings</CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <div className="space-y-3 sm:space-y-4">
@@ -659,10 +667,10 @@ export default function AnalyticsPage() {
 
         {/* AI Insights Tab */}
         <TabsContent value="insights" className="space-y-4 sm:space-y-6">
-          <Card className="glass-card hover-lift">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">AI Behavioral Insights</CardTitle>
-              <CardDescription className="text-sm">Guardian AI analysis of your trading patterns</CardDescription>
+          <Card className="bg-gradient-to-br from-cyan-50/50 to-teal-50/50 dark:from-cyan-950/50 dark:to-teal-950/50 border-2 border-cyan-200/30 dark:border-cyan-700/30 hover:border-cyan-300/50 dark:hover:border-cyan-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-cyan-100/30 to-teal-100/30 dark:from-cyan-800/30 dark:to-teal-800/30 border-b border-cyan-200/40 dark:border-cyan-600/40">
+              <CardTitle className="text-base sm:text-lg text-cyan-900 dark:text-cyan-100">AI Behavioral Insights</CardTitle>
+              <CardDescription className="text-sm text-cyan-700 dark:text-cyan-300">Guardian AI analysis of your trading patterns</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               {behavioralInsights.length > 0 ? (
