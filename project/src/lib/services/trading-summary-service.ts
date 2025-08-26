@@ -1,58 +1,58 @@
 import { prisma } from '@/lib/prisma'
 
 export interface TradingSummaryData {
-  // Overall Performance Metrics
-  totalTrades: number
-  totalBuyTrades: number
-  totalSellTrades: number
-  totalVolume: number
-  totalValue: number
-  
-  // P&L Analysis
-  totalPnL: number
-  totalPnLPct: number
-  winningTrades: number
-  losingTrades: number
-  winRate: number
-  averageWin: number
-  averageLoss: number
-  largestWin: number
-  largestLoss: number
-  
-  // Risk Metrics
-  maxDrawdown: number
-  maxDrawdownPct: number
-  sharpeRatio: number
-  volatility: number
-  
-  // Time-based Analysis
-  tradingDays: number
-  averageTradesPerDay: number
-  bestDay: { date: string; pnl: number }
-  worstDay: { date: string; pnl: number }
-  
-  // Symbol Analysis
-  topSymbols: Array<{ symbol: string; trades: number; pnl: number; volume: number }>
-  symbolPerformance: Array<{ symbol: string; winRate: number; avgPnL: number; totalPnL: number }>
-  
-  // Position Analysis
-  openPositions: number
-  totalOpenValue: number
-  unrealizedPnL: number
-  
-  // Behavioral Analysis
-  averageHoldingPeriod: number
-  mostActiveHour: number
-  mostActiveDay: string
-  consecutiveWins: number
-  consecutiveLosses: number
-  
-  // Monthly/Weekly Breakdowns
-  monthlyPerformance: Array<{ month: string; trades: number; pnl: number; volume: number }>
-  weeklyPerformance: Array<{ week: string; trades: number; pnl: number; volume: number }>
-  
-  // Index signature for JSON compatibility
-  [key: string]: any
+    // Overall Performance Metrics
+    totalTrades: number
+    totalBuyTrades: number
+    totalSellTrades: number
+    totalVolume: number
+    totalValue: number
+
+    // P&L Analysis
+    totalPnL: number
+    totalPnLPct: number
+    winningTrades: number
+    losingTrades: number
+    winRate: number
+    averageWin: number
+    averageLoss: number
+    largestWin: number
+    largestLoss: number
+
+    // Risk Metrics
+    maxDrawdown: number
+    maxDrawdownPct: number
+    sharpeRatio: number
+    volatility: number
+
+    // Time-based Analysis
+    tradingDays: number
+    averageTradesPerDay: number
+    bestDay: { date: string; pnl: number }
+    worstDay: { date: string; pnl: number }
+
+    // Symbol Analysis
+    topSymbols: Array<{ symbol: string; trades: number; pnl: number; volume: number }>
+    symbolPerformance: Array<{ symbol: string; winRate: number; avgPnL: number; totalPnL: number }>
+
+    // Position Analysis
+    openPositions: number
+    totalOpenValue: number
+    unrealizedPnL: number
+
+    // Behavioral Analysis
+    averageHoldingPeriod: number
+    mostActiveHour: number
+    mostActiveDay: string
+    consecutiveWins: number
+    consecutiveLosses: number
+
+    // Monthly/Weekly Breakdowns
+    monthlyPerformance: Array<{ month: string; trades: number; pnl: number; volume: number }>
+    weeklyPerformance: Array<{ week: string; trades: number; pnl: number; volume: number }>
+
+    // Index signature for JSON compatibility
+    [key: string]: any
 }
 
 export interface TradingSummaryOptions {
@@ -71,9 +71,13 @@ export class TradingSummaryService {
     static async generateSummary(options: TradingSummaryOptions): Promise<TradingSummaryData> {
         const { userId, startDate, endDate, includeOpenPositions = true, includeBehavioralAnalysis = true } = options
 
-        // Set default date range if not provided
-        const start = startDate || new Date(0) // Beginning of time
+        // Set default date range if not provided - last 12 months instead of beginning of time
         const end = endDate || new Date() // Now
+        const start = startDate || (() => {
+            const date = new Date()
+            date.setFullYear(date.getFullYear() - 1) // Last 12 months
+            return date
+        })()
 
         console.log(`Generating trading summary for user ${userId} from ${start.toISOString()} to ${end.toISOString()}`)
 

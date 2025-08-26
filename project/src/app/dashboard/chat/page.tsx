@@ -6,6 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useToast } from '@/hooks/use-toast'
 import { useUser } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
@@ -23,7 +31,9 @@ import {
   Target,
   Clock,
   Brain,
-  Zap
+  Zap,
+  ChevronDown,
+  Menu
 } from 'lucide-react'
 
 interface ChatMessage {
@@ -52,6 +62,7 @@ export default function ChatPage() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -411,26 +422,154 @@ Please try again in a moment, or ask a different question.`,
             </Button>
           </div>
 
-          {/* Suggested Prompts */}
+          {/* Quick Prompts Dropdown */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium">Quick prompts:</span>
-            <div className="flex flex-wrap gap-1">
-              {suggestedPrompts.map((prompt, index) => (
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+              <DropdownMenuTrigger asChild>
                 <Button
-                  key={index}
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => handleSuggestedPrompt(prompt.text)}
-                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
-                  disabled={isLoading}
+                  className="h-8 px-3 text-xs border-border/50 hover:border-border hover:bg-muted/50"
                 >
-                  <div className="flex items-center gap-1">
-                    {prompt.icon}
-                    <span className="truncate max-w-32">{prompt.text}</span>
-                  </div>
+                  <Menu className="h-3 w-3 mr-2" />
+                  Select a prompt
+                  <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="start" 
+                className="w-80 max-h-96 overflow-y-auto"
+                side="top"
+              >
+                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                  Choose a quick prompt to get started
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Performance Category */}
+                <div className="px-2 py-1">
+                  <div className="text-xs font-medium text-blue-600 mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-3 w-3" />
+                    Performance Analysis
+                  </div>
+                  {suggestedPrompts
+                    .filter(prompt => prompt.category === 'performance')
+                    .map((prompt, index) => (
+                      <DropdownMenuItem
+                        key={`perf-${index}`}
+                        onClick={() => {
+                          handleSuggestedPrompt(prompt.text)
+                          setIsDropdownOpen(false)
+                        }}
+                        className="text-xs p-2 rounded-md hover:bg-blue-50/50 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className="flex-shrink-0 text-blue-600 mt-0.5">
+                            {prompt.icon}
+                          </div>
+                          <span className="text-left leading-relaxed">
+                            {prompt.text}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                </div>
+
+                <DropdownMenuSeparator />
+                
+                {/* Risk Category */}
+                <div className="px-2 py-1">
+                  <div className="text-xs font-medium text-orange-600 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="h-3 w-3" />
+                    Risk Management
+                  </div>
+                  {suggestedPrompts
+                    .filter(prompt => prompt.category === 'risk')
+                    .map((prompt, index) => (
+                      <DropdownMenuItem
+                        key={`risk-${index}`}
+                        onClick={() => {
+                          handleSuggestedPrompt(prompt.text)
+                          setIsDropdownOpen(false)
+                        }}
+                        className="text-xs p-2 rounded-md hover:bg-orange-50/50 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className="flex-shrink-0 text-orange-600 mt-0.5">
+                            {prompt.icon}
+                          </div>
+                          <span className="text-left leading-relaxed">
+                            {prompt.text}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                </div>
+
+                <DropdownMenuSeparator />
+                
+                {/* Psychology Category */}
+                <div className="px-2 py-1">
+                  <div className="text-xs font-medium text-purple-600 mb-2 flex items-center gap-2">
+                    <Brain className="h-3 w-3" />
+                    Trading Psychology
+                  </div>
+                  {suggestedPrompts
+                    .filter(prompt => prompt.category === 'psychology')
+                    .map((prompt, index) => (
+                      <DropdownMenuItem
+                        key={`psych-${index}`}
+                        onClick={() => {
+                          handleSuggestedPrompt(prompt.text)
+                          setIsDropdownOpen(false)
+                        }}
+                        className="text-xs p-2 rounded-md hover:bg-purple-50/50 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className="flex-shrink-0 text-purple-600 mt-0.5">
+                    {prompt.icon}
+                          </div>
+                          <span className="text-left leading-relaxed">
+                            {prompt.text}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                </div>
+
+                <DropdownMenuSeparator />
+                
+                {/* Analysis Category */}
+                <div className="px-2 py-1">
+                  <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-2">
+                    <BarChart3 className="h-3 w-3" />
+                    Strategy Analysis
+                  </div>
+                  {suggestedPrompts
+                    .filter(prompt => prompt.category === 'analysis')
+                    .map((prompt, index) => (
+                      <DropdownMenuItem
+                        key={`analysis-${index}`}
+                        onClick={() => {
+                          handleSuggestedPrompt(prompt.text)
+                          setIsDropdownOpen(false)
+                        }}
+                        className="text-xs p-2 rounded-md hover:bg-green-50/50 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className="flex-shrink-0 text-green-600 mt-0.5">
+                            {prompt.icon}
+                          </div>
+                          <span className="text-left leading-relaxed">
+                            {prompt.text}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
               ))}
             </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useUserSync } from '@/hooks/useUserSync'
+import { useUser } from '@clerk/nextjs'
 import { useToast } from '@/hooks/use-toast'
 import BrokerConnectionComponent from '@/components/dashboard/broker-connection'
 import { 
@@ -59,6 +60,7 @@ interface NotificationPreferences {
 
 export default function SettingsPage() {
   const { user, loading: userLoading, error: userError, refreshUser } = useUserSync()
+  const { user: clerkUser } = useUser()
   const { toast } = useToast()
   
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -95,18 +97,29 @@ export default function SettingsPage() {
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false)
+  const [notificationSaveSuccess, setNotificationSaveSuccess] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [deleteType, setDeleteType] = useState<string>('')
 
-  // Load user profile data
-  useEffect(() => {
-    if (user) {
-      setUserProfile({
-        name: user.name || '',
-        email: user.email || ''
-      })
-    }
-  }, [user])
+      // Load user profile data from database
+    useEffect(() => {
+      if (user) {
+        setUserProfile({
+          name: user.name || user.clerkData?.firstName || '',
+          email: user.email || user.clerkData?.email || ''
+        })
+      }
+    }, [user])
+
+      // Fallback to Clerk data if database user is not loaded yet
+    useEffect(() => {
+      if (!user && !userLoading && clerkUser) {
+        setUserProfile({
+          name: clerkUser.firstName || clerkUser.username || '',
+          email: clerkUser.primaryEmailAddress?.emailAddress || ''
+        })
+      }
+    }, [user, userLoading, clerkUser])
 
   // Load user's current risk profile settings
   useEffect(() => {
@@ -263,10 +276,12 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
+        setNotificationSaveSuccess(true)
         toast({
           title: "Success",
           description: "Notification preferences saved successfully!",
         })
+        setTimeout(() => setNotificationSaveSuccess(false), 3000)
       } else {
         const error = await response.json()
         toast({
@@ -392,6 +407,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      
+      
+
       {userLoading ? (
         <div className="flex items-center justify-center min-h-[400px] p-4 sm:p-6">
           <div className="flex items-center gap-3">
@@ -418,39 +436,98 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
                 <CardTitle className="text-base sm:text-lg">User Profile</CardTitle>
+                {userLoading && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </div>
               <CardDescription className="text-sm">Your basic account information</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
+              {/* Profile Picture Display */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  {(user?.clerkData?.imageUrl || clerkUser?.imageUrl) ? (
+                    <img 
+                      src={user?.clerkData?.imageUrl || clerkUser?.imageUrl} 
+                      alt="Profile" 
+                      className="w-20 h-20 rounded-full object-cover border-2 border-border"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border-2 border-border">
+                      <User className="h-10 w-10 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Profile Picture</p>
+                  <p className="text-xs text-muted-foreground">
+                    Profile pictures are managed through your Clerk account
+                  </p>
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name" className="text-sm">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={userProfile.name}
-                    onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter your full name"
-                    className="mt-1"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      value={userProfile.name}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder={userLoading ? "Loading..." : "Enter your full name"}
+                      className="mt-1"
+                      disabled={userLoading}
+                    />
+                    {userLoading && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-sm">Email Address</Label>
-                  <Input
-                    id="email"
-                    value={userProfile.email}
-                    onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter your email"
-                    className="mt-1"
-                    disabled
-                  />
+                  <div className="relative">
+                    <Input
+                      id="email"
+                      value={userProfile.email}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder={userLoading ? "Loading..." : "Enter your email"}
+                      className="mt-1"
+                      disabled
+                    />
+                    {userLoading && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end mt-4">
-                <Button size="sm">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Profile
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveUserProfile}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
                 </Button>
               </div>
+              {profileSaveSuccess && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Profile updated successfully! Welcome back, {userProfile.name}!
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -460,6 +537,9 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-warning" />
                 <CardTitle className="text-base sm:text-lg">Risk Profile</CardTitle>
+                {isLoadingRisk && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </div>
               <CardDescription className="text-sm">Configure your risk management parameters</CardDescription>
             </CardHeader>
@@ -513,11 +593,27 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex justify-end mt-4">
-                <Button size="sm">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Risk Profile
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveRiskProfile}
+                  disabled={isSavingRisk}
+                >
+                  {isSavingRisk ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {isSavingRisk ? 'Saving...' : 'Save Risk Profile'}
                 </Button>
               </div>
+              {saveSuccess && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Risk profile saved successfully!</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -527,6 +623,9 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-accent" />
                 <CardTitle className="text-base sm:text-lg">Notification Preferences</CardTitle>
+                {isLoadingNotifications && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </div>
               <CardDescription className="text-sm">Choose what notifications you want to receive</CardDescription>
             </CardHeader>
@@ -594,11 +693,27 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex justify-end mt-4">
-                <Button size="sm">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Preferences
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveNotifications}
+                  disabled={isSavingNotifications}
+                >
+                  {isSavingNotifications ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {isSavingNotifications ? 'Saving...' : 'Save Preferences'}
                 </Button>
               </div>
+              {notificationSaveSuccess && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Notification preferences saved successfully!</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -611,18 +726,42 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-warning" />
                 <CardTitle className="text-base sm:text-lg">Data Management</CardTitle>
+                {(isExportingData || isDeletingData) && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </div>
               <CardDescription className="text-sm">Manage your trading data and exports</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button variant="outline" className="h-12">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export All Data
+                <Button 
+                  variant="outline" 
+                  className="h-12"
+                  onClick={handleExportData}
+                  disabled={isExportingData}
+                >
+                  {isExportingData ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  {isExportingData ? 'Exporting...' : 'Export All Data'}
                 </Button>
-                <Button variant="outline" className="h-12 text-destructive border-destructive/20 hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All Data
+                <Button 
+                  variant="outline" 
+                  className="h-12 text-destructive border-destructive/20 hover:bg-destructive/10"
+                  onClick={() => {
+                    setShowDeleteConfirm('all')
+                    setDeleteType('all')
+                  }}
+                  disabled={isDeletingData}
+                >
+                  {isDeletingData ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  {isDeletingData ? 'Deleting...' : 'Delete All Data'}
                 </Button>
               </div>
               <div className="mt-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
@@ -636,6 +775,50 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              {deleteType === 'all' 
+                ? "Are you sure you want to delete ALL your data? This action cannot be undone."
+                : "Are you sure you want to delete this data? This action cannot be undone."
+              }
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(null)}
+                disabled={isDeletingData}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteData}
+                disabled={isDeletingData}
+              >
+                {isDeletingData ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

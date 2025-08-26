@@ -33,7 +33,9 @@ import {
   ResponsiveContainer,
   PieChart as RechartsPieChart,
   Pie,
-  Cell
+  Cell,
+  ReferenceLine,
+  Brush
 } from 'recharts'
 
 interface TradingSummaryData {
@@ -326,18 +328,56 @@ export default function TradingSummary({ userId, className }: TradingSummaryProp
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={summary.monthlyPerformance}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Bar 
-                  dataKey="pnl" 
-                  fill="#3b82f6" 
-                  name="P&L"
-                  radius={[4, 4, 0, 0]}
+              <RechartsLineChart data={summary.monthlyPerformance}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.3} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => {
+                    const [year, month] = value.split('-')
+                    return `${month}/${year.slice(-2)}`
+                  }}
                 />
-              </BarChart>
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(Number(value))}
+                  labelFormatter={(label) => `Month: ${label}`}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'hsl(var(--foreground))'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="pnl" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                />
+                <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
+                <Brush 
+                  dataKey="month" 
+                  height={30} 
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--muted))"
+                  tickFormatter={(value) => {
+                    const [year, month] = value.split('-')
+                    return `${month}/${year.slice(-2)}`
+                  }}
+                />
+              </RechartsLineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -351,18 +391,19 @@ export default function TradingSummary({ userId, className }: TradingSummaryProp
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
-                <Pie
-                  data={[
-                    { name: 'Wins', value: summary.winningTrades, color: '#10b981' },
-                    { name: 'Losses', value: summary.losingTrades, color: '#ef4444' }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
+                                 <Pie
+                   data={[
+                     { name: 'Wins', value: summary.winningTrades, color: '#10b981' },
+                     { name: 'Losses', value: summary.losingTrades, color: '#ef4444' }
+                   ]}
+                   cx="50%"
+                   cy="50%"
+                   outerRadius={80}
+                   fill="#8884d8"
+                   dataKey="value"
+                   label={({ name, value, percent }) => `${name}: ${value} (${percent ? (percent * 100).toFixed(1) : 0}%)`}
+                   labelLine={true}
+                 >
                   {[
                     { name: 'Wins', value: summary.winningTrades, color: '#10b981' },
                     { name: 'Losses', value: summary.losingTrades, color: '#ef4444' }

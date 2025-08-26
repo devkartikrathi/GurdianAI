@@ -26,6 +26,7 @@ import {
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
+import { useUserSync } from '@/hooks/useUserSync'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -38,9 +39,10 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { user } = useUser()
+  const { user: clerkUser } = useUser()
   const { signOut } = useClerk()
   const { theme, setTheme } = useTheme()
+  const { user: userData } = useUserSync()
   const [mounted, setMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -87,7 +89,23 @@ export function Sidebar() {
           <div className="flex flex-col h-full">
             {/* Mobile Header */}
             <div className="flex h-16 items-center justify-between border-b border-border/50 px-6">
-              <h1 className="text-xl font-bold text-primary">GuardianAI</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold text-primary">GuardianAI</h1>
+                {userData?.clerkData?.imageUrl || clerkUser?.imageUrl ? (
+                  <img 
+                    src={userData?.clerkData?.imageUrl || clerkUser?.imageUrl} 
+                    alt="Profile" 
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                    <User className="h-3 w-3 text-primary" />
+                  </div>
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {userData?.clerkData?.firstName || clerkUser?.firstName || 'User'}
+                </span>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -240,16 +258,24 @@ export function Sidebar() {
             "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
             isCollapsed && "justify-center"
           )}>
-            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-primary" />
-            </div>
+            {userData?.clerkData?.imageUrl || clerkUser?.imageUrl ? (
+              <img 
+                src={userData?.clerkData?.imageUrl || clerkUser?.imageUrl} 
+                alt="Profile" 
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+            )}
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {user?.firstName || 'User'}
+                  {userData?.clerkData?.firstName || clerkUser?.firstName || 'User'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {user?.emailAddresses[0]?.emailAddress || 'user@example.com'}
+                  {userData?.email || clerkUser?.primaryEmailAddress?.emailAddress || 'user@example.com'}
                 </p>
               </div>
             )}

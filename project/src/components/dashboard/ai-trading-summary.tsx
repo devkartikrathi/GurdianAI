@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import {
   TrendingUp,
@@ -43,7 +44,9 @@ import {
   ResponsiveContainer,
   PieChart as RechartsPieChart,
   Pie,
-  Cell
+  Cell,
+  ReferenceLine,
+  Brush
 } from 'recharts'
 
 export interface AITradingSummaryData {
@@ -124,6 +127,7 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
   const [isGenerating, setIsGenerating] = useState(false)
   const [canGenerate, setCanGenerate] = useState(true)
   const [nextAvailable, setNextAvailable] = useState<Date | null>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('1y')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -178,13 +182,39 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
     }
   }
 
-  const generateSummary = async () => {
+  const generateSummary = async (period?: string) => {
     try {
       setIsGenerating(true)
+      
+      // Calculate date range based on selected period
+      let startDate: Date | undefined
+      let endDate: Date | undefined
+      
+      if (period && period !== 'all') {
+        endDate = new Date()
+        startDate = new Date()
+        
+        switch (period) {
+          case '3m':
+            startDate.setMonth(startDate.getMonth() - 3)
+            break
+          case '6m':
+            startDate.setMonth(startDate.getMonth() - 6)
+            break
+          case '1y':
+            startDate.setFullYear(startDate.getFullYear() - 1)
+            break
+        }
+      }
+      
       const response = await fetch('/api/ai-trading-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate' })
+        body: JSON.stringify({ 
+          action: 'generate',
+          startDate: startDate?.toISOString(),
+          endDate: endDate?.toISOString()
+        })
       })
 
       if (response.ok) {
@@ -282,7 +312,7 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
               )}
             </div>
             <Button 
-              onClick={generateSummary} 
+              onClick={() => generateSummary(selectedPeriod)} 
               disabled={!canGenerate || isGenerating}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             >
@@ -325,7 +355,7 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
             Refresh
           </Button>
           <Button 
-            onClick={generateSummary} 
+            onClick={() => generateSummary(selectedPeriod)} 
             disabled={!canGenerate || isGenerating}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
           >
@@ -511,6 +541,40 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
         </Card>
       </div>
 
+      {/* Date Range Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Analysis Period</CardTitle>
+          <CardDescription>Select the time period for your trading analysis</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <Select 
+              value={selectedPeriod} 
+              onValueChange={setSelectedPeriod}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3m">Last 3 Months</SelectItem>
+                <SelectItem value="6m">Last 6 Months</SelectItem>
+                <SelectItem value="1y">Last 12 Months</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              onClick={() => generateSummary(selectedPeriod)}
+              disabled={!canGenerate || isGenerating}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Regenerate for Period
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Performance Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Performance */}
@@ -520,18 +584,58 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
               <Calendar className="h-5 w-5 text-emerald-500" />
               <span>Monthly Performance</span>
             </CardTitle>
+            <CardDescription>
+              {selectedPeriod === 'all' ? 'All time performance' : 
+               selectedPeriod === '1y' ? 'Last 12 months' :
+               selectedPeriod === '6m' ? 'Last 6 months' :
+               selectedPeriod === '3m' ? 'Last 3 months' :
+               'Performance analysis'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={summary.monthlyPerformance}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.3} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => {
+                    const [year, month] = value.split('-')
+                    return `${month}/${year.slice(-2)}`
+                  }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
                 <Tooltip 
                   formatter={(value: any) => [formatCurrency(value), 'P&L']}
                   labelFormatter={(label) => `Month: ${label}`}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'hsl(var(--foreground))'
+                  }}
                 />
-                <Bar dataKey="pnl" fill="#10b981" />
+                <Bar dataKey="pnl" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
+                <Brush 
+                  dataKey="month" 
+                  height={30} 
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--muted))"
+                  tickFormatter={(value) => {
+                    const [year, month] = value.split('-')
+                    return `${month}/${year.slice(-2)}`
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -546,30 +650,38 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
-                <Pie
-                  data={[
-                    { name: 'Winning Trades', value: summary.winningTrades, color: '#10b981' },
-                    { name: 'Losing Trades', value: summary.losingTrades, color: '#ef4444' }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {[
-                    { name: 'Winning Trades', value: summary.winningTrades, color: '#10b981' },
-                    { name: 'Losing Trades', value: summary.losingTrades, color: '#ef4444' }
-                  ].map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: any) => [value, 'Trades']}
-                />
-              </RechartsPieChart>
-            </ResponsiveContainer>
+                         <ResponsiveContainer width="100%" height={300}>
+               <RechartsPieChart>
+                 <Pie
+                   data={[
+                     { name: 'Winning Trades', value: summary.winningTrades, color: '#10b981' },
+                     { name: 'Losing Trades', value: summary.losingTrades, color: '#ef4444' }
+                   ]}
+                   cx="50%"
+                   cy="50%"
+                   outerRadius={80}
+                   dataKey="value"
+                   label={({ name, value, percent }) => `${name}: ${value} (${percent ? (percent * 100).toFixed(1) : 0}%)`}
+                   labelLine={true}
+                 >
+                   {[
+                     { name: 'Winning Trades', value: summary.winningTrades, color: '#10b981' },
+                     { name: 'Losing Trades', value: summary.losingTrades, color: '#ef4444' }
+                   ].map((entry, index) => (
+                     <Cell key={`cell-${index}`} fill={entry.color} />
+                   ))}
+                 </Pie>
+                 <Tooltip 
+                   formatter={(value: any) => [value, 'Trades']}
+                   contentStyle={{
+                     backgroundColor: 'hsl(var(--card))',
+                     border: '1px solid hsl(var(--border))',
+                     borderRadius: '8px',
+                     color: 'hsl(var(--foreground))'
+                   }}
+                 />
+               </RechartsPieChart>
+             </ResponsiveContainer>
             <div className="mt-4 flex justify-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="h-3 w-3 rounded-full bg-green-500" />
