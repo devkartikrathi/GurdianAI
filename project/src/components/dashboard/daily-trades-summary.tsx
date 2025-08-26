@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -42,13 +42,7 @@ export default function DailyTradesSummary({ brokerConnectionId, userId }: Daily
   const [selectedDate, setSelectedDate] = useState<string>('')
   const { toast } = useToast()
 
-  useEffect(() => {
-    if (brokerConnectionId && userId) {
-      loadDailyTrades()
-    }
-  }, [brokerConnectionId, userId])
-
-  const loadDailyTrades = async () => {
+  const loadDailyTrades = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch(`/api/daily-trades?brokerConnectionId=${brokerConnectionId}`)
@@ -70,7 +64,14 @@ export default function DailyTradesSummary({ brokerConnectionId, userId }: Daily
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [brokerConnectionId, toast])
+
+  // Add useEffect after function definition to avoid circular dependency
+  useEffect(() => {
+    if (brokerConnectionId && userId) {
+      loadDailyTrades()
+    }
+  }, [brokerConnectionId, userId, loadDailyTrades])
 
   const getSelectedDayTrades = () => {
     return dailyTrades.find(trade => trade.tradeDate === selectedDate)

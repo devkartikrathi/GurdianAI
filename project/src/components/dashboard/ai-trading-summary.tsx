@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -130,12 +130,7 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
   const [selectedPeriod, setSelectedPeriod] = useState<string>('1y')
   const { toast } = useToast()
 
-  useEffect(() => {
-    loadSummary()
-    checkGenerationLimit()
-  }, [userId])
-
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/ai-trading-summary?action=get`)
@@ -167,9 +162,9 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
-  const checkGenerationLimit = async () => {
+  const checkGenerationLimit = useCallback(async () => {
     try {
       const response = await fetch(`/api/ai-trading-summary?action=check-limit`)
       if (response.ok) {
@@ -180,7 +175,13 @@ export default function AITradingSummary({ userId, className }: AITradingSummary
     } catch (error) {
       console.error('Error checking generation limit:', error)
     }
-  }
+  }, [])
+
+  // Add useEffect after all function definitions
+  useEffect(() => {
+    loadSummary()
+    checkGenerationLimit()
+  }, [userId, loadSummary, checkGenerationLimit])
 
   const generateSummary = async (period?: string) => {
     try {

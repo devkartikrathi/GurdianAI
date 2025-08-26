@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -73,11 +73,7 @@ export default function OpenTradesManager({ userId, className }: OpenTradesManag
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    loadOpenTrades()
-  }, [userId, showClosed])
-
-  const loadOpenTrades = async () => {
+  const loadOpenTrades = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/open-trades?includeClosed=${showClosed}`)
@@ -98,7 +94,12 @@ export default function OpenTradesManager({ userId, className }: OpenTradesManag
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [showClosed, toast])
+
+  // Add useEffect after function definition to avoid circular dependency
+  useEffect(() => {
+    loadOpenTrades()
+  }, [userId, showClosed, loadOpenTrades])
 
   const handleAction = (trade: OpenTrade, action: string) => {
     setSelectedTrade(trade)
