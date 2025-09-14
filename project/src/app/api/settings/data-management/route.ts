@@ -198,8 +198,6 @@ async function handleDataDeletion(userId: string, dataType: string) {
 
 async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
     try {
-        console.log(`Deleting trade book ${tradeBookId} for user ${userId}`)
-
         // First, get all raw trades for this trade book to find their IDs
         const rawTrades = await prisma.rawTrade.findMany({
             where: {
@@ -210,7 +208,6 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
         })
 
         const rawTradeIds = rawTrades.map(t => t.id)
-        console.log(`Found ${rawTradeIds.length} raw trades to delete`)
 
         // Delete matched trades that reference these raw trades
         const deletedMatchedTrades = await prisma.matchedTrade.deleteMany({
@@ -221,13 +218,10 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
                 ]
             }
         })
-        console.log(`Deleted ${deletedMatchedTrades.count} matched trades`)
 
         // For open trades, we need to identify which ones were created from this upload
         // We'll need to add a tradeBookId field to OpenTrade model in the future
         // For now, we'll leave open trades as they might be from other uploads
-        console.log('Note: Open trades are not automatically deleted to preserve data integrity')
-        console.log('Recommendation: Add tradeBookId field to OpenTrade model for proper cleanup')
 
         // Delete raw trades
         const deletedRawTrades = await prisma.rawTrade.deleteMany({
@@ -236,7 +230,6 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
                 userId: userId
             }
         })
-        console.log(`Deleted ${deletedRawTrades.count} raw trades`)
 
         // Finally delete the trade book
         const deletedTradeBook = await prisma.tradeBook.delete({
@@ -245,10 +238,8 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
                 userId: userId
             }
         })
-        console.log(`Deleted trade book: ${deletedTradeBook.fileName}`)
 
         // Clean up orphaned data and recalculate open positions
-        console.log('Cleaning up orphaned data and recalculating positions...')
 
         // Find and delete matched trades that reference non-existent raw trades
         const orphanedMatchedTrades = await prisma.matchedTrade.findMany({
@@ -277,11 +268,9 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
                 orphanedCount++
             }
         }
-        console.log(`Cleaned up ${orphanedCount} orphaned matched trades`)
 
         // Recalculate all open positions and matched trades based on remaining raw trades
         await recalculateAllPositionsAndMatches(userId)
-        console.log('Recalculated all open positions and matched trades')
 
         return NextResponse.json({
             success: true,
@@ -300,8 +289,6 @@ async function handleTradeBookDeletion(userId: string, tradeBookId: string) {
 
 async function handleDataCleanup(userId: string) {
     try {
-        console.log(`Starting data cleanup for user ${userId}`)
-
         // Find and delete orphaned matched trades
         const orphanedMatchedTrades = await prisma.matchedTrade.findMany({
             where: {
@@ -340,8 +327,6 @@ async function handleDataCleanup(userId: string) {
             where: { userId: userId }
         })
 
-        console.log(`Recalculated ${finalOpenTrades.length} open trades and generated trading summary`)
-
         return NextResponse.json({
             success: true,
             message: 'Data cleanup completed',
@@ -361,8 +346,6 @@ async function handleDataCleanup(userId: string) {
  */
 async function recalculateAllPositionsAndMatches(userId: string) {
     try {
-        console.log('Recalculating all positions and matches for user:', userId)
-
         // Get all unique symbols for this user
         const symbols = await prisma.rawTrade.findMany({
             where: { userId },
@@ -395,8 +378,6 @@ async function recalculateAllPositionsAndMatches(userId: string) {
             // Recalculate open positions
             await updateOpenPositions(userId, symbol, buyTrades, sellTrades)
         }
-
-        console.log('Successfully recalculated all positions and matches')
     } catch (error) {
         console.error('Error recalculating positions and matches:', error)
     }
@@ -483,8 +464,6 @@ async function updateOpenPositions(userId: string, symbol: string, allBuyTrades:
                     lastUpdated: new Date()
                 }
             })
-
-            console.log(`Created open position for ${symbol}: ${netQuantity} units @ ₹${weightedAveragePrice.toFixed(2)}`)
         }
     } catch (error) {
         console.error('Error updating open positions:', error)
@@ -508,8 +487,6 @@ function calculateWeightedAveragePrice(trades: any[]): number {
  */
 async function generateTradingSummary(userId: string) {
     try {
-        console.log(`Generating trading summary for user ${userId} after data cleanup`)
-
         // Import the trading summary service
         const { TradingSummaryService } = await import('@/lib/services/trading-summary-service')
 
@@ -522,8 +499,6 @@ async function generateTradingSummary(userId: string) {
 
         // Save to database
         await TradingSummaryService.saveSummary(userId, summaryData, { version: 1 })
-
-        console.log(`Successfully generated and saved trading summary for user ${userId}`)
 
     } catch (error) {
         console.error('Error generating trading summary:', error)

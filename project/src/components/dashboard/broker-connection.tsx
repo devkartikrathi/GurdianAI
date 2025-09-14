@@ -78,7 +78,6 @@ export default function BrokerConnectionComponent() {
       )
       
       if (pendingConnection && !showOAuthInstructions) {
-        console.log('Found pending Zerodha connection:', pendingConnection)
         setShowOAuthInstructions(pendingConnection.id)
       }
     }

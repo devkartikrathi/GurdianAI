@@ -145,19 +145,8 @@ export default function UploadPage() {
         }
       })
 
-      // Debug logging
-      console.log('Headers:', headers)
-      console.log('Column mapping:', columnMapping)
-      
       // Validate required mappings
       if (!columnMapping.symbol || !columnMapping.tradeType || !columnMapping.quantity || !columnMapping.price || !columnMapping.date) {
-        console.log('Missing mappings:', {
-          symbol: !!columnMapping.symbol,
-          tradeType: !!columnMapping.tradeType,
-          quantity: !!columnMapping.quantity,
-          price: !!columnMapping.price,
-          date: !!columnMapping.date
-        })
         toast({
           title: "Error",
           description: "Could not auto-detect required columns. Please ensure your CSV has: symbol, trade type, quantity, price, and date columns.",
@@ -173,6 +162,7 @@ export default function UploadPage() {
       const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
+            // Don't set Content-Type header - let browser set it with boundary
           })
 
           if (response.ok) {

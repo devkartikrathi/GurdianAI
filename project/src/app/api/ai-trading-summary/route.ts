@@ -119,7 +119,6 @@ async function handleGenerateAISummary(userId: string, options: Partial<AITradin
       }
     }
 
-    console.log(`Generating AI trading summary for user ${userId}`)
 
     // Generate AI summary
     const summaryData = await AITradingSummaryService.generateAISummary({
@@ -162,13 +161,13 @@ async function handleGenerateAISummary(userId: string, options: Partial<AITradin
 async function handleCheckLimit(userId: string) {
   try {
     const limitCheck = await AITradingSummaryService.canGenerateSummary(userId)
-    
+
     return NextResponse.json({
       success: true,
       data: {
         canGenerate: limitCheck.canGenerate,
         nextAvailable: limitCheck.nextAvailable,
-        message: limitCheck.canGenerate 
+        message: limitCheck.canGenerate
           ? 'You can generate a new AI summary now'
           : 'Daily limit reached. Try again tomorrow.'
       }
@@ -189,7 +188,7 @@ async function handleCheckLimit(userId: string) {
 async function handleGetAISummary(userId: string, version: number) {
   try {
     const summary = await AITradingSummaryService.getLatestAISummary(userId, version)
-    
+
     if (!summary) {
       return NextResponse.json({
         error: 'No AI summary found',

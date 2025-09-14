@@ -19,12 +19,7 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
 
-        console.log('OAuth Request:', { connectionId, requestToken, action, status, type })
-
         // Handle redirect URL parameters if they exist
-        if (action && status && type) {
-            console.log('Processing OAuth callback with parameters:', { action, status, type })
-        }
 
         const user = await prisma.user.findUnique({
             where: { clerkUserId: clerkUser.id },

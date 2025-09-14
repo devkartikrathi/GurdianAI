@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
         const formData = await request.formData()
         const file = formData.get('file') as File
 
-        console.log('Schema detection API received file:', file?.name);
-
         if (!file) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
         }
@@ -29,7 +27,6 @@ export async function POST(request: NextRequest) {
         try {
             // Use our enhanced CSV parser
             const schema = await CSVParser.detectSchema(file)
-            console.log('CSV schema detected:', schema);
 
             return NextResponse.json({ schema })
 

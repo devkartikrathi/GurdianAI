@@ -10,7 +10,25 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const formData = await request.formData()
+        // Check if request body is FormData
+        const contentType = request.headers.get('content-type')
+        if (!contentType || !contentType.includes('multipart/form-data')) {
+            return NextResponse.json({
+                error: 'Invalid content type. Expected multipart/form-data'
+            }, { status: 400 })
+        }
+
+        let formData: FormData
+        try {
+            formData = await request.formData()
+        } catch (error) {
+            console.error('Error parsing FormData:', error)
+            return NextResponse.json({
+                error: 'Failed to parse request as FormData',
+                details: error instanceof Error ? error.message : 'Unknown error'
+            }, { status: 400 })
+        }
+
         const file = formData.get('file') as File
         const columnMapping = formData.get('columnMapping') as string
 
@@ -40,10 +58,6 @@ export async function POST(request: NextRequest) {
         const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
         const dataRows = lines.slice(1)
 
-        console.log('CSV Headers:', headers)
-        console.log('Column Mapping:', mapping)
-        console.log('Sample row:', dataRows[0])
-
         // Create trade book
         const tradeBook = await prisma.tradeBook.create({
             data: {
@@ -65,11 +79,6 @@ export async function POST(request: NextRequest) {
                 const row = dataRows[i].split(',').map(cell => cell.trim().replace(/"/g, ''))
                 const trade = parseTradeRow(row, headers, mapping, i + 1)
                 if (trade) {
-                    console.log(`Row ${i + 1} parsed:`, {
-                        originalRow: row,
-                        parsedTrade: trade,
-                        tradeType: trade.tradeType
-                    })
                     rawTrades.push({
                         id: `temp_${i}_${Date.now()}`, // Temporary ID for matching
                         symbol: trade.symbol,
@@ -93,40 +102,6 @@ export async function POST(request: NextRequest) {
 
         // Apply trade matching using FIFO logic
         const matchingResult = TradeMatchingService.matchTrades(rawTrades)
-
-        console.log('Raw trades parsed:', rawTrades.map(t => ({
-            symbol: t.symbol,
-            tradeType: t.tradeType,
-            quantity: t.quantity,
-            price: t.price,
-            date: t.tradeDatetime
-        })))
-
-        console.log('Trade matching result:', {
-            totalTrades: rawTrades.length,
-            matchedTrades: matchingResult.matchedTrades.length,
-            openPositions: matchingResult.openPositions.length,
-            netProfit: matchingResult.netProfit
-        })
-
-        console.log('Sample matched trade:', matchingResult.matchedTrades[0])
-        console.log('Sample open position:', matchingResult.openPositions[0])
-
-        // Debug: Check for potential P&L calculation issues
-        if (matchingResult.matchedTrades.length > 0) {
-            const totalPnl = matchingResult.matchedTrades.reduce((sum, t) => sum + t.pnl, 0)
-            console.log('P&L Debug:', {
-                individualPnLs: matchingResult.matchedTrades.map(t => ({
-                    symbol: t.symbol,
-                    buyPrice: t.buyPrice,
-                    sellPrice: t.sellPrice,
-                    quantity: t.quantity,
-                    pnl: t.pnl
-                })),
-                totalPnl: totalPnl,
-                expectedNetProfit: matchingResult.netProfit
-            })
-        }
 
         // Save raw trades with proper IDs and matching info
         const savedRawTrades = await Promise.all(
@@ -222,16 +197,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        console.log('Open position consolidation:', {
-            originalPositions: matchingResult.openPositions.length,
-            consolidatedPositions: openPositionMap.size,
-            positions: Array.from(openPositionMap.values()).map(p => ({
-                symbol: p.symbol,
-                tradeType: p.tradeType,
-                quantity: p.quantity,
-                price: p.price
-            }))
-        })
 
         const savedOpenPositions = await Promise.all(
             Array.from(openPositionMap.values()).map(async (openPosition) => {

@@ -79,8 +79,6 @@ export class TradingSummaryService {
             return date
         })()
 
-        console.log(`Generating trading summary for user ${userId} from ${start.toISOString()} to ${end.toISOString()}`)
-
         try {
             // Get all matched trades in date range
             const matchedTrades = await prisma.matchedTrade.findMany({
@@ -147,7 +145,6 @@ export class TradingSummaryService {
                 weeklyPerformance
             }
 
-            console.log(`Successfully generated trading summary for user ${userId}`)
             return summary
 
         } catch (error) {
@@ -572,7 +569,6 @@ export class TradingSummaryService {
             })
 
             if (existingSummary && existingSummary.insightsHash === insightsHash) {
-                console.log(`Summary unchanged for user ${userId}, skipping update`)
                 return existingSummary
             }
 
@@ -599,7 +595,6 @@ export class TradingSummaryService {
                 }
             })
 
-            console.log(`Saved trading summary for user ${userId}, version ${version}`)
             return summary
 
         } catch (error) {

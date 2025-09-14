@@ -41,25 +41,15 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
   });
 
   const detectSchema = async (file: File) => {
-    console.log('🚀 detectSchema called with file:', file.name, file.size, file.type);
     setIsDetecting(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('📤 Sending file to schema detection API...');
-      console.log('📤 FormData entries:');
-      for (const [key, value] of formData.entries()) {
-        console.log(`  ${key}:`, value);
-      }
-
       const response = await fetch('/api/trades/schema-detect', {
         method: 'POST',
         body: formData,
       });
-
-      console.log('📥 Schema detection response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -68,18 +58,12 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       }
 
       const responseData = await response.json();
-      console.log('📥 Schema detection response data:', responseData);
       
       const { schema } = responseData;
       
       if (!schema) {
         throw new Error('No schema returned from API');
       }
-
-      console.log('✅ Schema received:', schema);
-      console.log('✅ Columns count:', schema.columns?.length);
-      console.log('✅ Confidence score:', schema.confidence_score);
-      console.log('✅ Suggested mapping:', schema.suggested_mapping);
 
       setSchema(schema);
       setColumnMapping(schema.suggested_mapping);
@@ -115,12 +99,6 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       formData.append('file', selectedFile);
       formData.append('columnMapping', JSON.stringify(columnMapping));
 
-      // Debug logging
-      console.log('Uploading with column mapping:', columnMapping);
-      console.log('FormData entries:');
-      for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
 
       const response = await fetch('/api/trades/upload', {
         method: 'POST',

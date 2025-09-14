@@ -115,8 +115,6 @@ export default function TradingSummary({ userId, className }: TradingSummaryProp
         const result = await response.json()
         setSummary(result.data.summary)
         setMetadata(result.data.metadata)
-      } else {
-        console.log('No existing summary found')
       }
     } catch (error) {
       console.error('Error loading trading summary:', error)

@@ -115,7 +115,6 @@ export async function POST(request: NextRequest) {
                     // This should happen rarely, not on every sync
                     const needsRecalculation = await checkDataIntegrity(user.id)
                     if (needsRecalculation) {
-                        console.log('Data integrity issues detected, performing full recalculation...')
                         await recalculateAllPositionsAndMatches(user.id)
                     }
 
@@ -254,7 +253,6 @@ async function updateOpenPositionIncrementally(userId: string, symbol: string, n
             await prisma.openTrade.delete({
                 where: { id: existingPosition.id }
             })
-            console.log(`Closed position for ${symbol} (net quantity = 0)`)
         } else {
             // Update existing position
             await prisma.openTrade.update({
@@ -267,7 +265,6 @@ async function updateOpenPositionIncrementally(userId: string, symbol: string, n
                     lastUpdated: new Date()
                 }
             })
-            console.log(`Updated position for ${symbol}: ${newQuantity} units @ ₹${newAveragePrice.toFixed(2)}`)
         }
     } catch (error) {
         console.error('Error updating position incrementally:', error)
@@ -302,7 +299,6 @@ async function createNewOpenPosition(userId: string, symbol: string, newBuyTrade
                     lastUpdated: new Date()
                 }
             })
-            console.log(`Created new position for ${symbol}: ${netQuantity} units @ ₹${weightedAveragePrice.toFixed(2)}`)
         }
     } catch (error) {
         console.error('Error creating new position:', error)
@@ -359,8 +355,6 @@ async function processNewTradeMatches(userId: string, symbol: string, newBuyTrad
                 if (remainingSellQuantity === 0) sellIndex++
             }
         }
-
-        console.log(`Processed new trade matches for ${symbol}: ${newBuyTrades.length} buy, ${newSellTrades.length} sell`)
     } catch (error) {
         console.error('Error processing new trade matches:', error)
     }
@@ -385,8 +379,6 @@ function calculateWeightedAveragePrice(trades: any[]): number {
  */
 async function generateTradingSummary(userId: string) {
     try {
-        console.log(`Generating trading summary for user ${userId} after sync`)
-
         // Import the trading summary service
         const { TradingSummaryService } = await import('@/lib/services/trading-summary-service')
 
@@ -399,8 +391,6 @@ async function generateTradingSummary(userId: string) {
 
         // Save to database
         await TradingSummaryService.saveSummary(userId, summaryData, { version: 1 })
-
-        console.log(`Successfully generated and saved trading summary for user ${userId}`)
 
     } catch (error) {
         console.error('Error generating trading summary:', error)
@@ -430,8 +420,6 @@ function calculateAveragePrice(trades: any[]): number {
  */
 async function recalculateAllPositionsAndMatches(userId: string) {
     try {
-        console.log('Recalculating all positions and matches for user:', userId)
-
         // Get all unique symbols for this user
         const symbols = await prisma.rawTrade.findMany({
             where: { userId },
@@ -462,8 +450,6 @@ async function recalculateAllPositionsAndMatches(userId: string) {
                 await processNewTradeMatches(userId, symbol, buyTrades, sellTrades)
             }
         }
-
-        console.log('Successfully recalculated all positions and matches')
     } catch (error) {
         console.error('Error recalculating positions and matches:', error)
     }

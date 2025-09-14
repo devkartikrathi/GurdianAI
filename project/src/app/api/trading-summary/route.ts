@@ -135,7 +135,6 @@ async function handleGenerateSummary(
             }
         }
 
-        console.log(`Generating trading summary for user ${userId}, version ${version}`)
 
         // Generate new summary
         const summaryData = await TradingSummaryService.generateSummary({

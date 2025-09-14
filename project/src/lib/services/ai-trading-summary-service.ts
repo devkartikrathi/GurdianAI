@@ -135,8 +135,6 @@ export class AITradingSummaryService {
       return date
     })()
 
-    console.log(`Generating AI trading summary for user ${userId} from ${start.toISOString()} to ${end.toISOString()}`)
-
     try {
       // Get all required data for AI analysis
       const userData = await this.getUserDataForAnalysis(userId, start, end)
@@ -153,7 +151,6 @@ export class AITradingSummaryService {
         aiInsights
       }
 
-      console.log(`Successfully generated AI trading summary for user ${userId}`)
       return summary
 
     } catch (error) {
@@ -839,7 +836,6 @@ Return ONLY the JSON object, no other text.
         }
       })
 
-      console.log(`Saved AI trading summary for user ${userId}, version ${version}`)
       return summary
 
     } catch (error) {

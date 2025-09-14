@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get('status')
         const type = searchParams.get('type')
 
-        console.log('Zerodha OAuth Callback:', { requestToken, action, status, type })
 
         if (!requestToken) {
             return NextResponse.json({ error: 'Request token is required' }, { status: 400 })
@@ -75,7 +74,6 @@ export async function GET(request: NextRequest) {
                 }
             })
 
-            console.log('OAuth completed successfully for connection:', pendingConnection.id)
 
             // Return a success page that the user can see
             return new NextResponse(`
